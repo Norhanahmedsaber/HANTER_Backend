@@ -37,5 +37,6 @@ async function isEmailExists(email) {
 
 module.exports = {
     signIn,
-    signUp
+    signUp,
+    isEmailExists
 }
