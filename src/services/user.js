@@ -1,7 +1,12 @@
 const user = require ('../models/user')
-export default function signin (username, password) {
+function signIn (username, password) {
 
 }
-export default function signUp (user) {
+function signUp (user) {
 
+}
+
+module.exports = {
+    signUp,
+    signIn
 }

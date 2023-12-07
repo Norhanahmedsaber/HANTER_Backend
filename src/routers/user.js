@@ -6,11 +6,11 @@ const router = new express.Router()
 router.post("/signin", async (req,res)=> {
     const username=req.body.username;
     const password=req.body.password;
-    const user = await user.signin(username,password)
+    const user = await user.signIn(username,password)
 })
 
 //signUp
-router.post("/signUp", async (req,res)=> {
+router.post("/signup", async (req,res)=> {
     const user = req.body;
     await user.signup(user)
 })
