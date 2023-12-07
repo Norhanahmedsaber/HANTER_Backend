@@ -25,7 +25,7 @@ async function signUp({ firstName, lastName, email, password, githubAccount }) {
     }
     return null
 }
-
+// Returns wether an email exists in the database or not
 async function isEmailExists(email) {
     
     const client = await pool.connect();
@@ -37,5 +37,6 @@ async function isEmailExists(email) {
 
 module.exports = {
     signIn,
-    signUp
+    signUp,
+    isEmailExists
 }

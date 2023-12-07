@@ -1,16 +1,28 @@
 const express = require('express')
-const user = require ('../services/user')
+const userServices = require ('../services/user')
 const router = new express.Router()
 
-//signin
+// Sign In
 router.post("/signin", async (req,res)=> {
-    const username=req.body.username;
-    const password=req.body.password;
-    const user = await user.signIn(username,password)
+    const payload = {
+        email: req.body.email,
+        password: req.body.password
+    }
+    const user = await userServices.signIn(payload)
+
+    if(user) {
+        return res.send(user)
+    }
+    // User not Found
+    return res.status(404).send({
+        message: 'Authentication Failed: Email or Password not Correct'
+    })
 })
 
-//signUp
+// Sign Up
 router.post("/signup", async (req,res)=> {
     const user = req.body;
-    await user.signup(user)
+    res.send(await userServices.signUp(user))
 })
+
+module.exports = router
