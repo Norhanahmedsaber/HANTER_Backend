@@ -8,6 +8,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 const port= process.env.PORT
 
+app.use(express.json())
 // Routers
 app.use(userRouter)
 
