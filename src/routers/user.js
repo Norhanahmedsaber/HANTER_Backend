@@ -21,8 +21,18 @@ router.post("/signin", async (req,res)=> {
 
 // Sign Up
 router.post("/signup", async (req,res)=> {
-    const user = req.body;
-    res.send(await userServices.signUp(user))
+    const payload = {
+     user : req.body,
+    }
+    const user = await userServices.signUp(payload)
+    
+    if (user) { 
+        return res.send(user)
+    }
+    // Invalid or missing Data
+    return res.status(404).send({
+        message: 'Invalid or missing data'
+    })
 })
 
 module.exports = router
