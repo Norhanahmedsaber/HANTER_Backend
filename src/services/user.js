@@ -48,6 +48,7 @@ async function signUp ({ firstName, lastName, email, password, githubAccount }) 
     if(!user) {
         return userUtils.generateErrorMessage(500, "An Error Has Occured")
     }
+    generateToken(user)
     return  {
         value: user
     }
