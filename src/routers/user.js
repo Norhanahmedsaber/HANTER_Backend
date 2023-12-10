@@ -9,12 +9,14 @@ router.post("/signin", async (req,res)=> {
         email: req.body.email,
         password: req.body.password
     }
-    const user = await userServices.signIn(payload)
+    const result = await userServices.signIn(payload)
 
-    if(user) {
-        return res.send(user)
+    if(result.value) {
+        return res.send(result.value)
     }
-    // User not Found
+    res.status(result.statusCode).send({
+        message: result.message
+    })
 })
 
 // Sign Up
@@ -30,6 +32,9 @@ router.post("/signup", async (req,res)=> {
     if (result.value) { 
         return res.send(result.value)
     }
+    res.status(result.statusCode).send({
+        message: result.message
+    })
 })
 // Get By ID
 router.get('/users/:id', async (req, res) => {

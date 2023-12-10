@@ -1,21 +1,20 @@
 const User = require ('../models/user')
-const userUtils=require('./utils/user')
+const userUtils = require('./utils/user')
 
 
 async function signIn ({email, password}) {
 
     // Checks if the email or password are missing
     if(!email || !password) {
-        // User not Found
-        return {
-            status: 404,
-            message:'Authentication Failed: Email or Password not Correct'
-        }
+        return userUtils.generateErrorMessage(400, "Missing Required Fields")
     }
     const user = await User.signIn({
         email,
         password
     })
+    if(!user) {
+        return userUtils.generateErrorMessage(404, "Authentication Failed: Email or Password not Correct")
+    }
     return {
         value: user
     }
@@ -24,33 +23,24 @@ async function signUp ({ firstName, lastName, email, password, githubAccount }) 
 
     if(!firstName || !lastName || !email || !password || !githubAccount) {
         // Invalid or missing Data
-        return {
-            status: 404,
-             message: 'Missing data'
-        }
+        return userUtils.generateErrorMessage(400, "Missing Required Data")
     }
     if (!userUtils.isEmail(email)) {
         // Invalid Email
-        return {
-            status: 404,
-            message:'Invalid mail' 
-        }
+        return userUtils.generateErrorMessage(400, "Invalid Email Format")
     }
     if (!userUtils.isPassword(password)) {
         // Password must contain
-        return {
-            status: 404,
-            message:'Password must contain : at least 8 characters contain unique chaaracter contain uppercase letter'
-        }
+        return userUtils.generateErrorMessage(400, "Password must contain : at least 8 characters contain unique chaaracter contain uppercase letter")
     }
-    if (User.isEmailExists(email)) {
+    if (await User.isEmailExists(email)) {
         //Email already exists
-        return {
-            status: 404,
-            message:'Email already exists'
-        }
+        return userUtils.generateErrorMessage(400, "Email Already In Use")
     }
     const user= await User.signUp({ firstName, lastName, email, password, githubAccount })
+    if(!user) {
+        return userUtils.generateErrorMessage(500, "An Error Has Occured")
+    }
     return  {
         value: user
     }
