@@ -1,5 +1,6 @@
 const express = require('express')
 const userServices = require ('../services/user')
+const auth = require('../middlewares/auth')
 const router = new express.Router()
 
 // Sign In
@@ -55,5 +56,15 @@ router.post("/signup", async (req,res)=> {
             })
     }
 })
-
+// Get By ID
+router.get('/users/:id', async (req, res) => {
+    const id = req.params.id
+    const result = await userServices.getById(id)
+    if(result.value) {
+        return res.send(result.value)
+    }
+    res.status(result.statusCode).send({
+        message: result.message
+    })
+})
 module.exports = router

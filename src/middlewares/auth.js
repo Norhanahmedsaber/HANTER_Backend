@@ -7,13 +7,16 @@ const auth = async (req , res , next)=>{
         const token = req.header('Authorization').replace('Bearer ' ,'')
         const decoded = jwt.verify(token , process.env.SECRET)
         //replace signin with getbyID
-        const user = await User.signIn()
+        const user = await User.getById(decoded.id)
         if(!user) throw new Error()
         req.user = user
         req.token = token
         next()
-    }catch(error)
-    {
-        res.status(401).send({error:"user not authorized"})
+    }catch(error) {
+        res.status(401).send({
+            message:"Not Authorized"
+        })
     }
 }
+
+module.exports = auth

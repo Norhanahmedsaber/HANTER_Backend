@@ -19,6 +19,7 @@ async function signIn ({email, password}) {
     }
 }
 async function signUp ({ firstName, lastName, email, password, githubAccount }) {
+
     if(!firstName || !lastName || !email || !password || !githubAccount) {
         return {
             status: 0
@@ -44,8 +45,23 @@ async function signUp ({ firstName, lastName, email, password, githubAccount }) 
         value: user
     }
 }
-
+async function getById(id) {
+    if(!id) {
+        return userUtils.generateErrorMessage(400, "User ID is Required")
+    }
+    if(isNaN(id)) {
+        return userUtils.generateErrorMessage(400, "User ID Must be of Type Integer")
+    }
+    const user = await User.getById(id);
+    if(!user) {
+        return userUtils.generateErrorMessage(404, "User Doesn't Exist")
+    }
+    return {
+        value: user
+    }
+}
 module.exports = {
     signUp,
-    signIn
+    signIn,
+    getById
 }

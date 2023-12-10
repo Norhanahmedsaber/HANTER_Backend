@@ -19,5 +19,14 @@ function isEmail(emailAdress){
    else 
     return false; 
 }
-
-  module.exports = {isPassword,isEmail}
+function generateErrorMessage(statusCode, message) {
+  return {
+    statusCode,
+    message
+  }
+}
+module.exports = {
+  isPassword,
+  isEmail,
+  generateErrorMessage
+}
