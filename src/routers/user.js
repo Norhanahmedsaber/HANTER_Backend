@@ -4,7 +4,7 @@ const auth = require('../middlewares/auth')
 const router = new express.Router()
 
 // Sign In
-router.post("/signin", async (req,res)=> {
+router.post("/login", async (req,res)=> {
     const payload = {
         email: req.body.email,
         password: req.body.password
@@ -37,7 +37,7 @@ router.post("/signup", async (req,res)=> {
     })
 })
 // Get By ID
-router.get('/users/:id', async (req, res) => {
+router.get('/users/:id', auth, async (req, res) => {
     const id = req.params.id
     const result = await userServices.getById(id)
     if(result.value) {
