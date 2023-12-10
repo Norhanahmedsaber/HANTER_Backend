@@ -15,10 +15,11 @@ async function signIn ({email, password}) {
     if(!user) {
         return userUtils.generateErrorMessage(404, "Authentication Failed: Email or Password not Correct")
     }
+    generateToken(user)
     return {
         value: user
     }
-    generateToken(user)
+    
     
 }
 async function signUp ({ firstName, lastName, email, password, githubAccount }) {
