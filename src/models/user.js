@@ -29,7 +29,7 @@ async function signUp({ firstName, lastName, email, password, githubAccount }) {
 async function isEmailExists(email) {
     
     const client = await pool.connect();
-    const { rows } = await client.query('SELECT email FROM users WHERE email = $1 ', [email])
+    const { rows } = await client.query('SELECT email FROM users WHERE email = $1', [email])
     client.release()
 
     return rows.length? true : false

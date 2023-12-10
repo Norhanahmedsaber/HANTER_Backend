@@ -1,6 +1,6 @@
 const User = require ('../models/user')
+const generateToken = require('./utils/genrateToken')
 const userUtils=require('./utils/user')
-
 
 async function signIn ({email, password}) {
 
@@ -17,6 +17,8 @@ async function signIn ({email, password}) {
     return {
         value: user
     }
+    generateToken(user)
+    
 }
 async function signUp ({ firstName, lastName, email, password, githubAccount }) {
     if(!firstName || !lastName || !email || !password || !githubAccount) {
@@ -34,7 +36,7 @@ async function signUp ({ firstName, lastName, email, password, githubAccount }) 
             status: 2
         }
     }
-    if (User.isEmailExists(email)) {
+    if (await User.isEmailExists(email)) {
         return {
             status: 3
         }
