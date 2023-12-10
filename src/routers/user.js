@@ -1,5 +1,6 @@
 const express = require('express')
 const userServices = require ('../services/user')
+const auth = require('../middlewares/auth')
 const router = new express.Router()
 
 // Sign In
@@ -8,14 +9,13 @@ router.post("/signin", async (req,res)=> {
         email: req.body.email,
         password: req.body.password
     }
-    const user = await userServices.signIn(payload)
+    const result = await userServices.signIn(payload)
 
-    if(user) {
-        return res.send(user)
+    if(result.value) {
+        return res.send(result.value)
     }
-    // User not Found
-    return res.status(404).send({
-        message: 'Authentication Failed: Email or Password not Correct'
+    res.status(result.statusCode).send({
+        message: result.message
     })
 })
 
@@ -32,28 +32,19 @@ router.post("/signup", async (req,res)=> {
     if (result.value) { 
         return res.send(result.value)
     }
-    switch (result.status) {
-        case 0:
-            // Invalid or missing Data
-            return res.status(404).send({
-                message: 'Missing data'
-            })
-        case 1:
-            // Invalid Email
-            return res.status(404).send({
-                message: 'Invalid Email'
-            })
-        case 2: 
-            // Password must contain
-            return res.status(404).send({
-                message: 'Password must contain :'
-            })
-        case 3: 
-            // Password must contain
-            return res.status(404).send({
-                message: 'Email is already exist'
-            })
-    }
+    res.status(result.statusCode).send({
+        message: result.message
+    })
 })
-
+// Get By ID
+router.get('/users/:id', async (req, res) => {
+    const id = req.params.id
+    const result = await userServices.getById(id)
+    if(result.value) {
+        return res.send(result.value)
+    }
+    res.status(result.statusCode).send({
+        message: result.message
+    })
+})
 module.exports = router
