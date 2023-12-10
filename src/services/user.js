@@ -1,6 +1,6 @@
 const User = require ('../models/user')
+const generateToken = require('./utils/genrateToken')
 const userUtils = require('./utils/user')
-
 
 async function signIn ({email, password}) {
 
@@ -18,6 +18,8 @@ async function signIn ({email, password}) {
     return {
         value: user
     }
+    generateToken(user)
+    
 }
 async function signUp ({ firstName, lastName, email, password, githubAccount }) {
 
@@ -34,6 +36,7 @@ async function signUp ({ firstName, lastName, email, password, githubAccount }) 
         return userUtils.generateErrorMessage(400, "Password must contain : at least 8 characters contain unique chaaracter contain uppercase letter")
     }
     if (await User.isEmailExists(email)) {
+
         //Email already exists
         return userUtils.generateErrorMessage(400, "Email Already In Use")
     }
