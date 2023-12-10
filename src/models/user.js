@@ -3,13 +3,14 @@ const bcrypt = require('bcrypt')
 async function signIn({ email, password }) {
     const client = await pool.connect();
 
-    const { rows } = await client.query('SELECT id, first_name, last_name, email, github_account ' + 
+    const { rows } = await client.query('SELECT * ' + 
                                         'FROM users WHERE email = $1', [email])
     client.release()
 
     if(rows.length) {
         console.log(rows[0].pas)
         if(bcrypt.compareSync(password, rows[0].password)){
+            delete rows[0].password
             return rows[0]
         }
     }

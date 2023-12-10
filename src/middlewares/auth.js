@@ -5,8 +5,7 @@ const User = require('../Models/User');
 const auth = async (req , res , next)=>{
     try {
         const token = req.header('Authorization').replace('Bearer ' ,'')
-        const decoded = jwt.verify(token , process.env.SECRET)
-        //replace signin with getbyID
+        const decoded = jwt.verify(token, process.env.SECRET)
         const user = await User.getById(decoded.id)
         if(!user) throw new Error()
         req.user = user

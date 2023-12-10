@@ -36,6 +36,7 @@ router.post("/signup", async (req,res)=> {
         message: result.message
     })
 })
+
 // Get By ID
 router.get('/users/:id', auth, async (req, res) => {
     const id = req.params.id

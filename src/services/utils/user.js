@@ -29,7 +29,6 @@ function generateErrorMessage(statusCode, message) {
 function ecncryptPassword(password){
   const salt = bcrypt.genSaltSync(10);
   const hash = bcrypt.hashSync(password, salt);
-  console.log(hash)
   return hash
 }
 module.exports = {
