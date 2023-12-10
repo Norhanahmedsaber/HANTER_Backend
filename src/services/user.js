@@ -2,6 +2,7 @@ const User = require ('../models/user')
 const userUtils = require('./utils/user')
 
 
+
 async function signIn ({email, password}) {
 
     // Checks if the email or password are missing
@@ -37,7 +38,9 @@ async function signUp ({ firstName, lastName, email, password, githubAccount }) 
         //Email already exists
         return userUtils.generateErrorMessage(400, "Email Already In Use")
     }
-    const user= await User.signUp({ firstName, lastName, email, password, githubAccount })
+    const encryptedpassword = userUtils.ecncryptPassword(password)
+    console.log(encryptedpassword)
+    const user= await User.signUp({ firstName, lastName, email, password:encryptedpassword, githubAccount })
     if(!user) {
         return userUtils.generateErrorMessage(500, "An Error Has Occured")
     }

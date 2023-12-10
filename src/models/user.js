@@ -1,13 +1,16 @@
 const pool = require('../database/postgres')
-
+const bcrypt = require('bcrypt')
 async function signIn({ email, password }) {
     const client = await pool.connect();
 
-    const { rows } = await client.query('SELECT * FROM users WHERE email = $1 AND password = $2', [email, password])
+    const { rows } = await client.query('SELECT * FROM users WHERE email = $1', [email])
     client.release()
 
     if(rows.length) {
-        return rows[0]
+        console.log(rows[0].pas)
+        if(bcrypt.compareSync(password, rows[0].password)){
+            return rows[0]
+        }
     }
     return null
 }
@@ -15,8 +18,8 @@ async function signIn({ email, password }) {
 async function signUp({ firstName, lastName, email, password, githubAccount }) {
     const client = await pool.connect();
 
-    const { rows, rowCount } = await client.query('INSERT INTO users (first_name, last_name, email, password, github_account) ' + 
-                                        'VALUES ($1, $2, $3, $4, $5) RETURNING *', [firstName, lastName, email, password, githubAccount])
+    const { rows, rowCount } = await client.query("INSERT INTO users (first_name, last_name, email, password, github_account) " + 
+                                        "VALUES ($1, $2, $3, $4, $5) RETURNING *", [firstName, lastName, email,  password, githubAccount])
 
     client.release()
 

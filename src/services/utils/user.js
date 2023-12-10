@@ -1,3 +1,4 @@
+const bcrypt = require('bcrypt');
 
 
 function isPassword(password){
@@ -25,8 +26,15 @@ function generateErrorMessage(statusCode, message) {
     message
   }
 }
+function ecncryptPassword(password){
+  const salt = bcrypt.genSaltSync(10);
+  const hash = bcrypt.hashSync(password, salt);
+  console.log(hash)
+  return hash
+}
 module.exports = {
   isPassword,
   isEmail,
-  generateErrorMessage
+  generateErrorMessage,
+  ecncryptPassword
 }
