@@ -3,7 +3,8 @@ const pool = require('../database/postgres')
 async function signIn({ email, password }) {
     const client = await pool.connect();
 
-    const { rows } = await client.query('SELECT * FROM users WHERE email = $1 AND password = $2', [email, password])
+    const { rows } = await client.query('SELECT id, first_name, last_name, email, github_account ' + 
+                                        'FROM users WHERE email = $1 AND password = $2', [email, password])
     client.release()
 
     if(rows.length) {
@@ -16,7 +17,8 @@ async function signUp({ firstName, lastName, email, password, githubAccount }) {
     const client = await pool.connect();
 
     const { rows, rowCount } = await client.query('INSERT INTO users (first_name, last_name, email, password, github_account) ' + 
-                                        'VALUES ($1, $2, $3, $4, $5) RETURNING *', [firstName, lastName, email, password, githubAccount])
+                                        'VALUES ($1, $2, $3, $4, $5) RETURNING id, first_name, last_name, email, github_account',
+                                        [firstName, lastName, email, password, githubAccount])
 
     client.release()
 
@@ -29,7 +31,8 @@ async function signUp({ firstName, lastName, email, password, githubAccount }) {
 async function getById(id) {
     const client = await pool.connect();
 
-    const { rows, rowCount } = await client.query('SELECT * FROM users WHERE ID = $1', [id])
+    const { rows, rowCount } = await client.query('SELECT id, first_name, last_name, email, github_account ' +
+                                                  'FROM users WHERE ID = $1', [id])
 
     client.release()
 
