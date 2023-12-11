@@ -1,0 +1,5 @@
+id: anas-nora-test 
+type: 1
+patterns:
+    - pattern: "const react = require('react')"     
+message: "Avoid insecure deserialization using pickle.loads"
