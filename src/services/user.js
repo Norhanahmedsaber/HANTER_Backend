@@ -1,6 +1,6 @@
 const User = require ('../models/user')
-const generateToken = require('./utils/genrateToken')
-const userUtils = require('./utils/user')
+const generateToken = require('../utils/genrateToken')
+const userUtils = require('../utils/accountFields')
 
 
 async function signIn ({email, password}) {
@@ -10,7 +10,7 @@ async function signIn ({email, password}) {
         return userUtils.generateErrorMessage(400, "Missing Required Fields")
     }
     const user = await User.signIn({
-        email,
+        email:email.toLowerCase().trim(),
         password
     })
     if(!user) {
@@ -44,11 +44,11 @@ async function signUp ({ firstName, lastName, email, password, githubAccount }) 
     }
     const encryptedpassword = userUtils.ecncryptPassword(password)
     const user = await User.signUp({
-        firstName,
-        lastName,
-        email,
+        firstName:firstName.toLowerCase().trim(),
+        lastName:lastName.toLowerCase().trim(),
+        email:email.toLowerCase().trim(),
         encryptedpassword,
-        githubAccount
+        githubAccount:githubAccount.toLowerCase().trim()
     })
     if(!user) {
         return userUtils.generateErrorMessage(500, "An Error Has Occured")
