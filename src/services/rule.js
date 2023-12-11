@@ -83,6 +83,7 @@ async function deleteRule(name,id) {
         return generateErrorMessage(500,"Internal Server Error, Please Try Again Later")
     }
 }
+
 async function ruleExist(name,createdBy){    
     if (!await checkSystemExistence(name,createdBy) && !await checkDbExistence(name,createdBy)) {
         return false
@@ -117,8 +118,15 @@ async function ruleExist(name,createdBy){
 
     return exists
  }
+
+async function getSystemRules() {
+    const rules = await Rule.getSystemRules()
+    return rules
+}
+
 module.exports= {
     addRule,
     getUserRules,
-    deleteRule
+    deleteRule,
+    getSystemRules
 }
