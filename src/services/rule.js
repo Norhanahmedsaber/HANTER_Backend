@@ -4,6 +4,9 @@ const yaml = require('js-yaml')
 const ftp = require('basic-ftp')
 const {Readable} = require('stream')
 async function addRule(rule, ruleName,createdBy) {
+    if(await ruleExist(ruleName,createdBy)){
+        return generateErrorMessage(400,"Rule already exists")
+    }
     const uploaded = await upload(rule, ruleName, createdBy)
     if(uploaded.message) {
         return generateErrorMessage(uploaded.statusCode, uploaded.message)
@@ -27,8 +30,8 @@ async function upload(rule, ruleName, createdBy) {
         user: process.env.FTP_EMAIL,
         password: process.env.FTP_PASSWORD
     })
-    await client.upload(Readable.from(rule.data), `${ruleName}-${createdBy}`)
-    return 'https://hanter.sirv.com/'+`${ruleName}-${createdBy}`
+    await client.upload(Readable.from(rule.data), generateName(ruleName,createdBy))
+    return 'https://hanter.sirv.com/'+generateName(ruleName,createdBy)
 }
 function isValidExtenstion(ruleName) {
     const extenstion = ruleName.split('.').pop()
@@ -55,6 +58,9 @@ function isValidYaml(text) {
 }
 
 async function deleteRule(name,id) {
+    if(!await ruleExist(name,id)){
+        return generateErrorMessage(404,"rule not found")
+    }
     try {
         const client = new ftp.Client()
         await client.access({
@@ -62,7 +68,7 @@ async function deleteRule(name,id) {
             user: process.env.FTP_EMAIL,
             password: process.env.FTP_PASSWORD
         })
-        const ruleName=`${name}-${id}`
+        const ruleName=generateName(name,id)
         await client.remove(ruleName)
         const result = await Rule.deleteRule(name,id)
         if(result) {
@@ -77,6 +83,40 @@ async function deleteRule(name,id) {
         return generateErrorMessage(500,"Internal Server Error, Please Try Again Later")
     }
 }
+async function ruleExist(name,createdBy){    
+    if (!await checkSystemExistence(name,createdBy) && !await checkDbExistence(name,createdBy)) {
+        return false
+    }
+    return true
+ }
+ async function checkDbExistence(name,createdBy){
+    const result = await Rule.isExisted(name,createdBy)
+    if(!result){
+        return false
+    }
+    return true
+ }
+ function generateName(name,createdBy){
+    return `${name}-${createdBy}`
+ }
+ async function checkSystemExistence(name,createdBy){
+    generateName(name,createdBy)
+    const client = new ftp.Client()
+    await client.access({
+        host: "ftp.sirv.com",
+        user: process.env.FTP_EMAIL,
+        password: process.env.FTP_PASSWORD
+    })
+    const files = await client.list('./')
+    let exists=false
+    files.forEach((file)=>{
+        if(generateName(name,createdBy)===file.name){
+            exists=true
+        }
+    })
+
+    return exists
+ }
 module.exports= {
     addRule,
     getUserRules,
