@@ -43,7 +43,13 @@ async function signUp ({ firstName, lastName, email, password, githubAccount }) 
         return userUtils.generateErrorMessage(400, "Email Already In Use")
     }
     const encryptedpassword = userUtils.ecncryptPassword(password)
-    console.log(encryptedpassword)
+    const user = await User.signUp({
+        firstName,
+        lastName,
+        email,
+        encryptedpassword,
+        githubAccount
+    })
     if(!user) {
         return userUtils.generateErrorMessage(500, "An Error Has Occured")
     }
