@@ -48,9 +48,12 @@ async function getById(id) {
 async function isEmailExists(email) {
     
     const client = await pool.connect();
-    const { rows } = await client.query('SELECT email FROM users WHERE email = $1', [email])
+    const { rows, rowCount } = await client.query('SELECT email FROM users WHERE email = $1', [email])
     client.release()
-    return rows.length > 0? true : false
+    console.log(rowCount)
+    if(rowCount) {
+        return true
+    }else return false
 }
 
 module.exports = {

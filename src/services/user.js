@@ -24,7 +24,6 @@ async function signIn ({email, password}) {
     
 }
 async function signUp ({ firstName, lastName, email, password, githubAccount }) {
-
     if(!firstName || !lastName || !email || !password || !githubAccount) {
         // Invalid or missing Data
         return userUtils.generateErrorMessage(400, "Missing Required Data")
@@ -37,8 +36,7 @@ async function signUp ({ firstName, lastName, email, password, githubAccount }) 
         // Password must contain
         return userUtils.generateErrorMessage(400, "Password must contain : at least 8 characters contain unique chaaracter contain uppercase letter")
     }
-    if (await User.isEmailExists(email)) {
-
+    if (await User.isEmailExists(email.toLowerCase())) {
         //Email already exists
         return userUtils.generateErrorMessage(400, "Email Already In Use")
     }
