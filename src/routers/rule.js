@@ -60,7 +60,17 @@ router.get('/rules',auth,async (req,res) => {
     }
     res.send(result)
 })
-router.get('/rules/system', async (req, res) => {
+
+router.get('/rules/:id' , async(req ,res)=>{
+    const id = req.params.id
+    const result = await ruleServices.getCustomRule(id)
+    if(result.message){
+        return res.status(result.statusCode).send({
+            message:result.message
+        })
+    }
+    res.send(result)
+})
     try {
         const rules = await ruleServices.getSystemRules()
         res.send(rules)

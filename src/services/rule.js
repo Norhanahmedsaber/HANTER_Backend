@@ -2,7 +2,9 @@ const Rule = require('../models/rule')
 const { generateErrorMessage } = require('../utils/accountFields')
 const yaml = require('js-yaml')
 const ftp = require('basic-ftp')
-const {Readable} = require('stream')
+const { Readable } = require('stream')
+const fs = require ('fs')
+const path = require('path')
 async function addRule(rule, ruleName,createdBy) {
     if(await ruleExist(ruleName,createdBy)){
         return generateErrorMessage(400,"Rule already exists")
@@ -55,6 +57,32 @@ function isValidYaml(text) {
        return generateErrorMessage(404,"User has no rules")
     }
     return rules
+}
+
+async function getCustomRule (id){
+    const result = await Rule.getById(id)
+    if(!result)
+    {
+       return generateErrorMessage(404 , "Rule doesn't exist")
+    }
+    if(!result.created_by){
+        const rule = fs.readFileSync(path.resolve('./rules/'+result.name+'.yml'),{encoding:'utf-8'})
+        return {
+            value:rule
+        }
+    }
+    const client = new ftp.Client()
+    await client.access({
+        host: "ftp.sirv.com",
+        user: process.env.FTP_EMAIL,
+        password: process.env.FTP_PASSWORD
+    })
+    await client.downloadTo(path.resolve(`./tmp/${result.name + "-" + result.created_by}.yml`) , result.name + "-" + result.created_by)
+    const rule = fs.readFileSync(path.resolve('./tmp/'+result.name+'-'+result.created_by+'.yml'),{encoding:'utf-8'})
+    fs.unlinkSync(path.resolve('./tmp/'+result.name+'-'+result.created_by+'.yml'))
+    return{
+        value:rule
+    }
 }
 
 async function deleteRule(name,id) {
@@ -128,5 +156,6 @@ module.exports= {
     addRule,
     getUserRules,
     deleteRule,
-    getSystemRules
+    getCustomRule,
+    getSystemRules,
 }
