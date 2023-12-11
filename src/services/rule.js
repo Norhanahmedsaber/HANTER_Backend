@@ -1,5 +1,5 @@
 const Rule = require('../models/rule')
-const { generateErrorMessage } = require('./utils/user')
+const { generateErrorMessage } = require('../utils/accountFields')
 const multer =require ('multer')
 const path = require('path')
 const fs= require('fs')
