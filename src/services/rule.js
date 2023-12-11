@@ -37,7 +37,10 @@ function isValidExtenstion(ruleName) {
 function isValidYaml(text) {
     // todo
     try {
-        yaml.load(text)
+        const loadedFile = yaml.load(text)
+        if(typeof loadedFile !== 'object'){
+            return false
+        }
         return true
     }catch(e) {
         return false
@@ -50,7 +53,32 @@ function isValidYaml(text) {
     }
     return rules
 }
+
+async function deleteRule(name,id) {
+    try {
+        const client = new ftp.Client()
+        await client.access({
+            host: "ftp.sirv.com",
+            user: process.env.FTP_EMAIL,
+            password: process.env.FTP_PASSWORD
+        })
+        const ruleName=`${name}-${id}`
+        await client.remove(ruleName)
+        const result = await Rule.deleteRule(name,id)
+        if(result) {
+            return {
+                value: result
+            }
+        }
+        return generateErrorMessage (500,"Database error")
+        
+    }catch (e) {
+        console.log(e)
+        return generateErrorMessage(500,"Internal Server Error, Please Try Again Later")
+    }
+}
 module.exports= {
     addRule,
-    getUserRules
+    getUserRules,
+    deleteRule
 }
