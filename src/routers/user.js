@@ -5,7 +5,7 @@ const router = new express.Router()
 
 // Sign In
 router.post("/login", async (req,res)=> {
-    console.log(req.body)
+
     const payload = {
         email: req.body.email,
         password: req.body.password
@@ -37,8 +37,9 @@ router.post("/signup", async (req,res)=> {
         message: result.message
     })
 })
+
 // Get By ID
-router.get('/users/:id', async (req, res) => {
+router.get('/users/:id', auth, async (req, res) => {
     const id = req.params.id
     const result = await userServices.getById(id)
     if(result.value) {
