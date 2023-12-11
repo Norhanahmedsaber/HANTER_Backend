@@ -1,44 +1,47 @@
 const Rule = require('../models/rule')
 const { generateErrorMessage } = require('./utils/user')
-const multer =require ('multer')
-const path = require('path')
-const fs= require('fs')
 const yaml = require('js-yaml')
-async function addRule(ruleName,createdBy) {
-    const result = validate(ruleName+'-'+createdBy)
-    if(result) {
-        return generateErrorMessage(result.statusCode, result.message)
+const ftp = require('basic-ftp')
+const {Readable} = require('stream')
+async function addRule(rule, ruleName,createdBy) {
+    const uploaded = await upload(rule, ruleName, createdBy)
+    if(uploaded.message) {
+        return generateErrorMessage(uploaded.statusCode, uploaded.message)
     }
-    const rule = await Rule.createRule(ruleName, createdBy, `./rules/${ruleName}`)
-    if(rule) {
-        return rule
+    const result = Rule.createRule(ruleName, createdBy, uploaded)
+    if(!result) {
+        return generateErrorMessage(500, "Database Error")
     }
-    return generateErrorMessage(500, 'Database Error')
+    return result
 }
-function validate(fileName) {
-    let text
-    try{
-        text = fs.readFileSync(path.resolve(path.join('./rules',fileName+'.yml')),{ encoding: 'utf-8' })
-        if(!text) {
-            text = fs.readFileSync(path.resolve(path.join('./rules',fileName+'.yaml')),{ encoding: 'utf-8' })
-        }
-    }catch(e) {
-        return generateErrorMessage(400,'File Might Be Empty')
+async function upload(rule, ruleName, createdBy) {
+    if(!isValidExtenstion(rule.name)) {
+        return generateErrorMessage(400, "Invalid Extension")
     }
-    try{
+    if(!isValidYaml(rule.data?.toString('utf-8'))) {
+        return generateErrorMessage(400, "Invalid rule Syntax")
+    }
+    const client = new ftp.Client()
+    await client.access({
+        host: "ftp.sirv.com",
+        user: process.env.FTP_EMAIL,
+        password: process.env.FTP_PASSWORD
+    })
+    await client.upload(Readable.from(rule.data), `${ruleName}-${createdBy}`)
+    return 'https://hanter.sirv.com/'+`${ruleName}-${createdBy}`
+}
+function isValidExtenstion(ruleName) {
+    const extenstion = ruleName.split('.').pop()
+    return extenstion === 'yaml' || extenstion === 'yml'
+}
+function isValidYaml(text) {
+    // todo
+    try {
         yaml.load(text)
-    }catch(e)
-    {
-        console.log(e)
-        deleteFile(fileName)
-        return generateErrorMessage(400,'Invalid yaml syntax')
+        return true
+    }catch(e) {
+        return false
     }
-    // validation of rule structure
-
-}
-function deleteFile(fileName) {
-    const filePath = path.resolve(path.join('./rules',fileName+'.yml'))
-    fs.unlinkSync(filePath)
 }
  async function getUserRules(id) {
     const rules = await Rule.getbyUserId(id)
