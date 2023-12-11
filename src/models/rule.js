@@ -11,6 +11,15 @@ async function createRule(name, created_by, url) {
     }
     return null 
 }
+async function getbyUserId(id) {
+    console.log(id)
+    const client =await pool.connect();
+    const {rows,rowCount}=await client.query("SELECT * FROM rules where created_by =$1",[id])
+    if(rowCount) {
+        return rows
+    }
+}
 module.exports = {
-    createRule
+    createRule,
+    getbyUserId
 }
