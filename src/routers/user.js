@@ -4,7 +4,8 @@ const auth = require('../middlewares/auth')
 const router = new express.Router()
 
 // Sign In
-router.post("/signin", async (req,res)=> {
+router.post("/login", async (req,res)=> {
+    console.log(req.body)
     const payload = {
         email: req.body.email,
         password: req.body.password
