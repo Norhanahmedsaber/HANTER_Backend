@@ -1,3 +1,4 @@
+const { query } = require('express');
 const pool=require('../database/postgres')
 
 
@@ -26,8 +27,18 @@ async function deleteRule(name,id) {
         return rowCount
     }
 }
+
+async function getById(id){
+    const client = await pool.connect()
+    const {rows , rowCount} = await client.query('SELECT * FROM rules where id = $1',[id])
+    if(rowCount){
+        return rows[0]
+    }
+    return null
+}
 module.exports = {
     createRule,
     getbyUserId,
-    deleteRule
+    deleteRule,
+    getById
 }

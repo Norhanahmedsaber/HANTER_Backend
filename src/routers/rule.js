@@ -61,4 +61,15 @@ router.get('/rules',auth,async (req,res) => {
     res.send(result)
 
 })
+
+router.get('/rules/:id' , async(req ,res)=>{
+    const id = req.params.id
+    const result = await ruleServices.getCustomRule(id)
+    if(result.message){
+        return res.status(result.statusCode).send({
+            message:result.message
+        })
+    }
+    res.send(result)
+})
  module.exports = router
