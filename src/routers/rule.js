@@ -48,4 +48,17 @@ router.delete('/rules', auth, async (req, res) => {
         })
     }
 })
+// Get user rules
+router.get('/rules',auth,async (req,res) => {
+    const id=req.user.id
+    console.log(id)
+    const result=await ruleServices.getUserRules(id)
+    if(result.message) {
+        return res.status(result.statusCode).send({
+            message: result.message
+        })
+    }
+    res.send(result)
+
+})
  module.exports = router

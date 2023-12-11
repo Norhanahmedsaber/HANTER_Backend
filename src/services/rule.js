@@ -43,6 +43,14 @@ function isValidYaml(text) {
         return false
     }
 }
+ async function getUserRules(id) {
+    const rules = await Rule.getbyUserId(id)
+    if(!rules) {
+       return generateErrorMessage(404,"User has no rules")
+    }
+    return rules
+}
 module.exports= {
-    addRule
+    addRule,
+    getUserRules
 }
