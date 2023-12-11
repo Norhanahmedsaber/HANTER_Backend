@@ -7,6 +7,7 @@ const swaggerDocument = require('./docs/swagger.json');
 const cors = require('cors')
 const rulesRouter=require('./src/routers/rule')
 const bodyParser = require('body-parser')
+const repoRouter = require('./src/routers/repo')
 const fileUpload = require('express-fileupload')
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
@@ -21,6 +22,7 @@ app.use(fileUpload())
 // Routers
 app.use(userRouter)
 app.use(rulesRouter)
+app.use(repoRouter)
 app.listen(port, ()=>{
     console.log("server is running on port " + port)
 })

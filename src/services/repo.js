@@ -2,16 +2,24 @@ const url = require("url")
 const dns = require("dns")
 const { generateErrorMessage } = require("../utils/accountFields")
 const { error } = require("console")
+const Repo = require("../models/repo")
 
-async function createRepo(url)
+async function createRepo(repoURL, userId)
 {
-    const parsedUrl = url.parse(url)
+    const parsedUrl = url.parse(repoURL)
     if(!parsedUrl.hostname){
-        return generateErrorMessage(400 , "Invalid URl")
+        return generateErrorMessage(400 , "Invalid URL")
     }
-    dns.lookup(parsedUrl.hostname , (error , address , family)=>{
-        if(error){
-            return generateErrorMessage(400 ,"Couldn't Find Domain")
+    // todo Verify url
+    const result = await Repo.createRepo(repoURL, userId)
+    if(result) {
+        return {
+            value: result
         }
-    })
+    }
+    return generateErrorMessage(500, "Internal Server Error")
+}
+
+module.exports = {
+    createRepo
 }
