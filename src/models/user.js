@@ -8,7 +8,6 @@ async function signIn({ email, password }) {
     client.release()
 
     if(rows.length) {
-        console.log(rows[0].pas)
         if(bcrypt.compareSync(password, rows[0].password)){
             delete rows[0].password
             return rows[0]
@@ -17,12 +16,12 @@ async function signIn({ email, password }) {
     return null
 }
 
-async function signUp({ firstName, lastName, email, password, githubAccount }) {
+async function signUp({ firstName, lastName, email, encryptedpassword, githubAccount }) {
     const client = await pool.connect();
 
     const { rows, rowCount } = await client.query('INSERT INTO users (first_name, last_name, email, password, github_account) ' + 
                                         'VALUES ($1, $2, $3, $4, $5) RETURNING id, first_name, last_name, email, github_account',
-                                        [firstName, lastName, email, password, githubAccount])
+                                        [firstName, lastName, email, encryptedpassword, githubAccount])
 
     client.release()
 
