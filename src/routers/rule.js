@@ -51,14 +51,23 @@ router.delete('/rules', auth, async (req, res) => {
 })
 // Get user rules
 router.get('/rules',auth,async (req,res) => {
-    const id=req.user.id
-    const result=await ruleServices.getUserRules(id)
+    const id = req.user.id
+    const result = await ruleServices.getUserRules(id)
     if(result.message) {
         return res.status(result.statusCode).send({
             message: result.message
         })
     }
     res.send(result)
-
 })
- module.exports = router
+router.get('/rules/system', async (req, res) => {
+    try {
+        const rules = await ruleServices.getSystemRules()
+        res.send(rules)
+    }catch(e) {
+        res.status(500).send({
+            message: "Internal Server Error"
+        })
+    }
+})
+module.exports = router
