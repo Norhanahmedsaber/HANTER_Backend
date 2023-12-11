@@ -1,7 +1,7 @@
 const multer =require ('multer')
 const util =require('util')
 const path =require('path')
-const { generateErrorMessage } = require('../services/utils/user')
+const { generateErrorMessage } = require('../utils/accountFields')
 const storage = multer.diskStorage({
     destination:function(req,rule,cb)
     {

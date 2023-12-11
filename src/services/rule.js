@@ -1,5 +1,5 @@
 const Rule = require('../models/rule')
-const { generateErrorMessage } = require('./utils/user')
+const { generateErrorMessage } = require('../utils/accountFields')
 const yaml = require('js-yaml')
 const ftp = require('basic-ftp')
 const {Readable} = require('stream')
