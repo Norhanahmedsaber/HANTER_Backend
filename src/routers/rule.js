@@ -3,30 +3,49 @@ const router=new express.Router()
 const auth =require ('../middlewares/auth')
 const uploadRule =require('../middlewares/upload')
 const ruleServices = require('../services/rule')
+const ftp = require('basic-ftp')
+const {Readable} = require('stream')
 
-//Upload
-router.post("/upload", auth, async(req,res)=>{
-    uploadRule(req,res,(err)=>{
-        if(err)
-        {
-            return res.status(400).send({
-                message: err.message
-            })
-        }
-    })
-    res.send({
-        message: "Uploaded"
-    })
-})
-router.post('/rules', auth, async (req, res) => {
+
+router.post('/rules', auth, async(req, res) => {
     const ruleName = req.body.name
     const createdBy = req.user.id
-    const result = await ruleServices.addRule(ruleName,createdBy)
-    if(result.message) {
-        return res.status(result.statusCode).send({
-            message: result.message
+    const rule = req.files.rule
+    try {
+        const result = await ruleServices.addRule(rule, ruleName, createdBy)
+        if(result.message) {
+            return res.status(result.statusCode).send({
+                message: result.message
+            })
+        }
+        res.send(result)
+    }catch (e) {
+        console.log(e)
+        res.status(500).send({
+            message: "Internal Server Error, Please Try Again Later"
         })
     }
-    res.send(result)
+})
+router.delete('/rules', auth, async (req, res) => {
+    const ruleName = req.body.name
+    const createdBy = req.user.id
+    try {
+        const client = new ftp.Client()
+        await client.access({
+            host: "ftp.sirv.com",
+            user: process.env.FTP_EMAIL,
+            password: process.env.FTP_PASSWORD
+        })
+        await client.remove(`${ruleName}-${createdBy}`)
+        res.send({
+            message: "Deleted Succesfully"
+        })
+        
+    }catch (e) {
+        console.log(e)
+        res.status(500).send({
+            message: "Internal Server Error, Please Try Again Later"
+        })
+    }
 })
  module.exports = router
