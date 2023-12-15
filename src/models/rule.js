@@ -37,7 +37,7 @@ async function isExisted(name,createdBy){
 }
 async function getSystemRules() {
     const client = await pool.connect()
-    const {rows} = await client.query('SELECT name FROM rules WHERE created_by IS NULL')
+    const {rows} = await client.query('SELECT name , id FROM rules WHERE created_by IS NULL')
     return rows
 }
 module.exports = {
