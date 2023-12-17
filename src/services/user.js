@@ -71,8 +71,18 @@ async function getById(id) {
         value: user
     }
 }
+async function getProfile(id) {
+    const user = await User.getById(id)
+    if(!user) {
+        return userUtils.generateErrorMessage(404, "User Doesn't exist")
+    }
+    return {
+        value: user
+    }
+}
 module.exports = {
     signUp,
     signIn,
-    getById
+    getById,
+    getProfile
 }

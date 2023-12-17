@@ -49,4 +49,14 @@ router.get('/users/:id', auth, async (req, res) => {
         message: result.message
     })
 })
+// Get My Profile
+router.get('/profile', auth, async(req, res) => {
+    const result = await userServices.getProfile(req.user.id)
+    if(result.value) {
+        return res.send(result.value)
+    }
+    res.status(result.statusCode).send({
+        message: result.message
+    })
+})
 module.exports = router
