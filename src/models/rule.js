@@ -1,3 +1,4 @@
+const { query } = require('express');
 const pool=require('../database/postgres')
 
 
@@ -35,6 +36,14 @@ async function isExisted(name,createdBy){
         return rowCount
     }
 }
+
+async function getById(id){
+    const client = await pool.connect()
+    const {rows , rowCount} = await client.query('SELECT * FROM rules where id = $1',[id])
+    if(rowCount){
+        return rows[0]
+    }
+    return null
 async function getSystemRules() {
     const client = await pool.connect()
     const {rows} = await client.query('SELECT name , id FROM rules WHERE created_by IS NULL')
@@ -44,6 +53,7 @@ module.exports = {
     createRule,
     getbyUserId,
     deleteRule,
+    getById,
     isExisted,
     getSystemRules
 }
