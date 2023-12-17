@@ -70,7 +70,7 @@ router.get('/rules/:id' , async(req ,res)=>{
         })
     }
     res.send(result)
-})
+
     try {
         const rules = await ruleServices.getSystemRules()
         res.send(rules)
