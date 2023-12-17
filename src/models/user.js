@@ -50,7 +50,6 @@ async function isEmailExists(email) {
     const client = await pool.connect();
     const { rows, rowCount } = await client.query('SELECT email FROM users WHERE email = $1', [email])
     client.release()
-    console.log(rowCount)
     if(rowCount) {
         return true
     }else return false
