@@ -66,5 +66,25 @@ router.get('/project/:id',auth,async(req,res)=>{
         })
     }
 })
-
+router.delete('/project/:id',auth,async(req,res)=>{
+    const userId=req.user.id
+    const id=req.params.id
+    const result =await projectServices.deleteById(id,userId)
+    try{ 
+        if(result.message) { 
+            return res.status(result.statusCode).send({
+            message: result.message
+        })  
+     }
+     res.send({
+        message: result.value
+     })
+    }
+    catch(e){
+        console.log(e)
+        res.status(500).send({
+            message: "Internal Server Error, Please Try Again Later"
+        })
+    }
+})
 module.exports=router
