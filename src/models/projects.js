@@ -20,6 +20,26 @@ async function createProject({name,url,user_id,config,rules}){
     client.release()
     return rows[0]
 }
+async function getMyProjects(id) {
+    const client=await pool.connect();
+    const {rows,rowCount}= await client.query('SELECT * FROM projects WHERE user_id=$1',[id])
+    client.release()
+    if(rowCount){
+        return rows
+    }
+    return null
+} 
+async function getById(id){
+    const client=await pool.connect();
+    const {rows,rowCount}= await client.query('SELECT * FROM projects WHERE id=$1',[id])
+    client.release()
+    if(rowCount){
+        return rows[0]
+    }
+    return null
+}  
 module.exports ={
-    createProject
+    createProject,
+    getMyProjects,
+    getById
 }

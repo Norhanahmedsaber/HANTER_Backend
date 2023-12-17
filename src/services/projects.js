@@ -16,6 +16,32 @@ async function addProject({name,url,user_id,config,rules}) {
         value:project
     }
 }
+async function getMyProjects(id) {
+    const result=await Project.getMyProjects(id)
+    if(!result) {
+        return generateErrorMessage(404,"Projects not found")
+    }
+    return {
+        value:result
+    }
+}
+async function getById(id,userId) {
+    const result=await Project.getById(id)
+    if(!result) {
+        return generateErrorMessage(404,"Project not found")
+    }
+    if(userId!==result.user_id)
+    {
+        return generateErrorMessage(401,"Not Authorized")
+    }
+    return {
+        value:result
+    }
+}
+
+
 module.exports={
-    addProject
+    addProject,
+    getMyProjects,
+    getById
 }
