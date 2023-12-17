@@ -40,6 +40,7 @@ async function isExisted(name,createdBy){
 async function getById(id){
     const client = await pool.connect()
     const {rows , rowCount} = await client.query('SELECT * FROM rules where id = $1',[id])
+    client.release()
     if(rowCount){
         return rows[0]
     }
@@ -48,8 +49,10 @@ async function getById(id){
 async function getSystemRules() {
     const client = await pool.connect()
     const {rows} = await client.query('SELECT name , id FROM rules WHERE created_by IS NULL')
+    client.release()
     return rows
 }
+
 module.exports = {
     createRule,
     getbyUserId,
