@@ -44,6 +44,7 @@ async function getById(id){
         return rows[0]
     }
     return null
+}
 async function getSystemRules() {
     const client = await pool.connect()
     const {rows} = await client.query('SELECT name , id FROM rules WHERE created_by IS NULL')
