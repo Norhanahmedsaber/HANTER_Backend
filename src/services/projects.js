@@ -38,10 +38,24 @@ async function getById(id,userId) {
         value:result
     }
 }
-
+async function deleteById(id,userId) {
+    let result=await Project.getById(id)
+    if(!result) {
+        return generateErrorMessage(404,"Project not found")
+    }
+    if(userId!==result.user_id)
+    {
+        return generateErrorMessage(401,"Not Authorized")
+    }
+     result=await Project.deleteById(id)
+    return {
+        value:"deleted successfuly"
+    }
+}
 
 module.exports={
     addProject,
     getMyProjects,
-    getById
+    getById,
+    deleteById
 }

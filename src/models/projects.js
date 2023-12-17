@@ -37,9 +37,22 @@ async function getById(id){
         return rows[0]
     }
     return null
-}  
+} 
+async function deleteById(id) {
+    const client=await pool.connect();
+    const {rows,rowCount}=await client.query('DELETE FROM projects_rules where project_id=$1',[id])
+    if(rowCount) {
+       const {rows:projects,rowCount:projectCount} = await client.query('DELETE FROM projects WHERE id=$1 RETURNING id',[id])
+       if(!projectCount){
+        return null
+       }
+       client.release()
+       return projects[0]
+    }
+}
 module.exports ={
     createProject,
     getMyProjects,
-    getById
+    getById,
+    deleteById
 }
