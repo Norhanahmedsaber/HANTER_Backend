@@ -33,9 +33,10 @@ async function addRuleString(ruleName , createdBy , rule){
         user: process.env.FTP_EMAIL,
         password: process.env.FTP_PASSWORD
     })
-    await client.uploadFrom(path.resolve('/tmp'+ruleName+'-'+createdBy+'.yml') , generateName(ruleName , createdBy))
-    const url = 'https://hanter.sirv.com/' + generateName(ruleName,createdBy)
-    const result = Rule.createRule(ruleName , createdBy , url)
+    const uuid = uuidv4()
+    await client.uploadFrom(path.resolve('/tmp'+ruleName+'-'+createdBy+'.yml') , uuid)
+    const url = 'https://hanter.sirv.com/' + uuid
+    const result = Rule.createRule(ruleName , createdBy , url, uuid)
     if(!result){
         return generateErrorMessage(500 , 'DataBase Error')
     }
