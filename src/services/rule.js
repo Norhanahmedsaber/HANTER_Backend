@@ -5,20 +5,23 @@ const ftp = require('basic-ftp')
 const { Readable } = require('stream')
 const fs = require ('fs')
 const path = require('path')
+const {v4: uuidv4} = require('uuid')
 async function addRule(rule, ruleName,createdBy) {
     if(await ruleExist(ruleName,createdBy)){
         return generateErrorMessage(400,"Rule already exists")
     }
-    const uploaded = await upload(rule, ruleName, createdBy)
+    const id = uuidv4()
+    const uploaded = await upload(rule, id)
     if(uploaded.message) {
         return generateErrorMessage(uploaded.statusCode, uploaded.message)
     }
-    const result = Rule.createRule(ruleName, createdBy, uploaded)
+    const result = Rule.createRule(ruleName, createdBy, uploaded, id)
     if(!result) {
         return generateErrorMessage(500, "Database Error")
     }
     return result
 }
+
 async function addRuleString(ruleName , createdBy , rule){
     if(await ruleExist(ruleName,createdBy)){
         return generateErrorMessage(400,"Rule already exists")
@@ -51,8 +54,8 @@ async function upload(rule, ruleName, createdBy) {
         user: process.env.FTP_EMAIL,
         password: process.env.FTP_PASSWORD
     })
-    await client.upload(Readable.from(rule.data), generateName(ruleName,createdBy))
-    return 'https://hanter.sirv.com/'+generateName(ruleName,createdBy)
+    await client.upload(Readable.from(rule.data), id)
+    return 'https://hanter.sirv.com/' + id
 }
 function isValidExtenstion(ruleName) {
     const extenstion = ruleName.split('.').pop()
@@ -70,8 +73,14 @@ function isValidYaml(text) {
     return rules
 }
 
-async function getCustomRule (id){
-    const result = await Rule.getById(id)
+async function getCustomRule (uuid,userId){
+    const result = await Rule.getById(uuid)
+    if(!result) {
+        return generateErrorMessage(400, "Not Found")
+    }
+    if(userId!==result.created_by) {
+        return generateErrorMessage(401,"Not Authorized")
+    }   
     if(!result)
     {
        return generateErrorMessage(404 , "Rule doesn't exist")
@@ -88,16 +97,17 @@ async function getCustomRule (id){
         user: process.env.FTP_EMAIL,
         password: process.env.FTP_PASSWORD
     })
-    await client.downloadTo(path.resolve(`./tmp/${result.name + "-" + result.created_by}.yml`) , result.name + "-" + result.created_by)
-    const rule = fs.readFileSync(path.resolve('./tmp/'+result.name+'-'+result.created_by+'.yml'),{encoding:'utf-8'})
-    fs.unlinkSync(path.resolve('./tmp/'+result.name+'-'+result.created_by+'.yml'))
+    await client.downloadTo(path.resolve(`./tmp/${result.uuid}.yml`) , result.uuid)
+    const rule = fs.readFileSync(path.resolve('./tmp/' + result.uuid + '.yml'),{encoding:'utf-8'})
+    fs.unlinkSync(path.resolve('./tmp/' + result.uuid + '.yml'))
     return{
-        value:rule
+        ...result,
+        value: rule
     }
 }
 
-async function deleteRule(name,id) {
-    if(!await ruleExist(name,id)){
+async function deleteRule(uuid) {
+    if(!await ruleExist(uuid)){
         return generateErrorMessage(404,"rule not found")
     }
     try {
@@ -107,9 +117,8 @@ async function deleteRule(name,id) {
             user: process.env.FTP_EMAIL,
             password: process.env.FTP_PASSWORD
         })
-        const ruleName=generateName(name,id)
-        await client.remove(ruleName)
-        const result = await Rule.deleteRule(name,id)
+        await client.remove(uuid)
+        const result = await Rule.deleteRule(uuid)
         if(result) {
             return {
                 value: result
@@ -123,14 +132,16 @@ async function deleteRule(name,id) {
     }
 }
 
-async function ruleExist(name,createdBy){    
-    if (!await checkSystemExistence(name,createdBy) && !await checkDbExistence(name,createdBy)) {
+async function ruleExist(uuid){   
+    console.log(await checkSystemExistence(uuid))
+    console.log(await checkDbExistence(uuid))
+    if (!await checkSystemExistence(uuid) && !await checkDbExistence(uuid)) {
         return false
     }
     return true
  }
- async function checkDbExistence(name,createdBy){
-    const result = await Rule.isExisted(name,createdBy)
+ async function checkDbExistence(uuid){
+    const result = await Rule.isExisted(uuid)
     if(!result){
         return false
     }
@@ -139,8 +150,7 @@ async function ruleExist(name,createdBy){
  function generateName(name,createdBy){
     return `${name}-${createdBy}`
  }
- async function checkSystemExistence(name,createdBy){
-    generateName(name,createdBy)
+ async function checkSystemExistence(uuid){
     const client = new ftp.Client()
     await client.access({
         host: "ftp.sirv.com",
@@ -150,7 +160,8 @@ async function ruleExist(name,createdBy){
     const files = await client.list('./')
     let exists=false
     files.forEach((file)=>{
-        if(generateName(name,createdBy)===file.name){
+        console.log(uuid, file.name)
+        if(uuid===file.name){
             exists=true
         }
     })
