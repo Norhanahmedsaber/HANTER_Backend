@@ -5,12 +5,12 @@ const ftp = require('basic-ftp')
 const { Readable } = require('stream')
 const fs = require ('fs')
 const path = require('path')
-const {v4: uuid} = require('uuid')
+const {v4: uuidv4} = require('uuid')
 async function addRule(rule, ruleName,createdBy) {
     if(await ruleExist(ruleName,createdBy)){
         return generateErrorMessage(400,"Rule already exists")
     }
-    const id = uuid()
+    const id = uuidv4()
     const uploaded = await upload(rule, id)
     if(uploaded.message) {
         return generateErrorMessage(uploaded.statusCode, uploaded.message)
@@ -61,8 +61,11 @@ function isValidYaml(text) {
     return rules
 }
 
-async function getCustomRule (id,userId){
-    const result = await Rule.getById(id)
+async function getCustomRule (uuid,userId){
+    const result = await Rule.getById(uuid)
+    if(!result) {
+        return generateErrorMessage(400, "Not Found")
+    }
     if(userId!==result.created_by) {
         return generateErrorMessage(401,"Not Authorized")
     }   
@@ -91,7 +94,7 @@ async function getCustomRule (id,userId){
     }
 }
 
-async function deleteRule(uuid, userId) {
+async function deleteRule(uuid) {
     if(!await ruleExist(uuid)){
         return generateErrorMessage(404,"rule not found")
     }
@@ -118,6 +121,8 @@ async function deleteRule(uuid, userId) {
 }
 
 async function ruleExist(uuid){   
+    console.log(await checkSystemExistence(uuid))
+    console.log(await checkDbExistence(uuid))
     if (!await checkSystemExistence(uuid) && !await checkDbExistence(uuid)) {
         return false
     }
@@ -143,7 +148,8 @@ async function ruleExist(uuid){
     const files = await client.list('./')
     let exists=false
     files.forEach((file)=>{
-        if(uuid===file.uuid){
+        console.log(uuid, file.name)
+        if(uuid===file.name){
             exists=true
         }
     })
