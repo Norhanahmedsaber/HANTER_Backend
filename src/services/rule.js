@@ -42,7 +42,7 @@ async function addRuleString(ruleName , createdBy , rule){
     }
     return result
 }
-async function upload(rule, ruleName, createdBy) {
+async function upload(rule, uuid) {
     if(!isValidExtenstion(rule.name)) {
         return generateErrorMessage(400, "Invalid Extension")
     }
@@ -55,8 +55,8 @@ async function upload(rule, ruleName, createdBy) {
         user: process.env.FTP_EMAIL,
         password: process.env.FTP_PASSWORD
     })
-    await client.upload(Readable.from(rule.data), id)
-    return 'https://hanter.sirv.com/' + id
+    await client.upload(Readable.from(rule.data), uuid)
+    return 'https://hanter.sirv.com/' + uuid
 }
 function isValidExtenstion(ruleName) {
     const extenstion = ruleName.split('.').pop()
@@ -134,8 +134,6 @@ async function deleteRule(uuid) {
 }
 
 async function ruleExist(uuid){   
-    console.log(await checkSystemExistence(uuid))
-    console.log(await checkDbExistence(uuid))
     if (!await checkSystemExistence(uuid) && !await checkDbExistence(uuid)) {
         return false
     }
@@ -161,7 +159,6 @@ async function ruleExist(uuid){
     const files = await client.list('./')
     let exists=false
     files.forEach((file)=>{
-        console.log(uuid, file.name)
         if(uuid===file.name){
             exists=true
         }

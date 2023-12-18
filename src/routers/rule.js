@@ -6,7 +6,7 @@ const ruleServices = require('../services/rule')
 const ftp = require('basic-ftp')
 const {Readable} = require('stream')
 
-
+// create rule (uploaded file)
 router.post('/rules', auth, async(req, res) => {
     const ruleName = req.body.name
     const createdBy = req.user.id
