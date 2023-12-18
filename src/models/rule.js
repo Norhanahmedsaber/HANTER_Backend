@@ -2,10 +2,10 @@ const { query } = require('express');
 const pool=require('../database/postgres')
 
 
-async function createRule(name, created_by, url) {
+async function createRule(name, created_by, url, id) {
     const  client = await pool.connect();
-    const {rows, rowCount} = await client.query('INSERT INTO rules (name,url,created_by) ' + 
-    'VALUES($1,$2,$3) RETURNING *',[name, url, created_by])
+    const {rows, rowCount} = await client.query('INSERT INTO rules (uuid,name,url,created_by) ' + 
+    'VALUES($1,$2,$3,$4) RETURNING *',[id, name, url, created_by])
     client.release()
     if(rowCount) {
         return rows[0]
@@ -20,26 +20,33 @@ async function getbyUserId(id) {
         return rows
     }
 }
-async function deleteRule(name,id) {
+async function deleteRule(uuid) {
     const client =await pool.connect();
-    const {rows,rowCount}=await client.query('DELETE FROM "rules" WHERE name=$1 AND created_by =$2 ',[name,id])
-    client.release()
-    if(rowCount) {
-        return rowCount
+    const {rows, rowCount}= await client.query('SELECT id FROM rules WHERE uuid=$1',[uuid])
+    const id = rows[0].id
+    if(!rowCount) {
+        return null
     }
+    await client.query('DELETE FROM projects_rules WHERE rule_id=$1',[id])
+    const {rows:rules,rowCount:ruleCount} = await client.query('DELETE FROM rules WHERE uuid=$1 ',[uuid])
+    if(!ruleCount){
+        return null
+    }
+    client.release()
+    return ruleCount
 }
-async function isExisted(name,createdBy){
-    const client=await pool.connect();
-    const {rowCount} = await client.query("SELECT id FROM rules where name=$1 AND created_by=$2",[name,createdBy])
+async function isExisted(uuid){
+    const client = await pool.connect();
+    const {rowCount} = await client.query("SELECT id FROM rules where uuid = $1",[uuid])
     client.release()
     if(rowCount) {
-        return rowCount
+        return true
     }
+    return false
 }
 
 async function getById(id){
     const client = await pool.connect()
-    console.log(id)
     const {rows , rowCount} = await client.query('SELECT * FROM rules where id = $1',[id])
     client.release()
     if(rowCount){

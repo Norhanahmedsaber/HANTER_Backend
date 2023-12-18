@@ -36,10 +36,10 @@ router.post('/rules', auth, async(req, res) => {
         })
     }
 })
-router.delete('/rules', auth, async (req, res) => {
-    const ruleName = req.body.name
-    const createdBy = req.user.id
-    const result=await ruleServices.deleteRule(ruleName,createdBy)
+router.delete('/rules/:uuid', auth, async (req, res) => {
+    const uuid = req.params.uuid
+    const userId = req.user.id
+    const result=await ruleServices.deleteRule(uuid, userId)
     if(result.message) {
         return res.status(result.statusCode).send({
             message: result.message
@@ -61,9 +61,10 @@ router.get('/rules',auth,async (req,res) => {
     res.send(result)
 })
 
-router.get('/rules/:id' , async(req ,res)=>{
+router.get('/rules/:id' ,auth, async(req ,res)=>{
     const id = req.params.id
-    const result = await ruleServices.getCustomRule(id)
+    const userId=req.user.id
+    const result = await ruleServices.getCustomRule(id,userId)
     if(result.message){
         return res.status(result.statusCode).send({
             message:result.message
