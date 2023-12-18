@@ -2,10 +2,10 @@ const { query } = require('express');
 const pool=require('../database/postgres')
 
 
-async function createRule(name, created_by, url, id) {
+async function createRule(name, created_by, url, uuid) {
     const  client = await pool.connect();
     const {rows, rowCount} = await client.query('INSERT INTO rules (uuid,name,url,created_by) ' + 
-    'VALUES($1,$2,$3,$4) RETURNING *',[id, name, url, created_by])
+    'VALUES($1,$2,$3,$4) RETURNING *',[uuid, name, url, created_by])
     client.release()
     if(rowCount) {
         return rows[0]
