@@ -65,6 +65,7 @@ async function getCustomRule (id){
     {
        return generateErrorMessage(404 , "Rule doesn't exist")
     }
+    console.log(result)
     if(!result.created_by){
         const rule = fs.readFileSync(path.resolve('./rules/'+result.name+'.yml'),{encoding:'utf-8'})
         return {
@@ -78,10 +79,11 @@ async function getCustomRule (id){
         password: process.env.FTP_PASSWORD
     })
     await client.downloadTo(path.resolve(`./tmp/${result.name + "-" + result.created_by}.yml`) , result.name + "-" + result.created_by)
-    const rule = fs.readFileSync(path.resolve('./tmp/'+result.name+'-'+result.created_by+'.yml'),{encoding:'utf-8'})
-    fs.unlinkSync(path.resolve('./tmp/'+result.name+'-'+result.created_by+'.yml'))
+    const rule = fs.readFileSync(path.resolve('./tmp/' + result.name + '-'+result.created_by + '.yml'),{encoding:'utf-8'})
+    fs.unlinkSync(path.resolve('./tmp/' + result.name+'-' + result.created_by + '.yml'))
     return{
-        value:rule
+        ...result,
+        value: rule
     }
 }
 
