@@ -21,7 +21,27 @@ async function addRule(rule, ruleName,createdBy) {
     }
     return result
 }
-async function upload(rule, id) {
+
+async function addRuleString(ruleName , createdBy , rule){
+    if(await ruleExist(ruleName,createdBy)){
+        return generateErrorMessage(400,"Rule already exists")
+    }
+    fs.writeFileSync(path.resolve('/tmp'+ruleName+'-'+createdBy+'.yml'),rule)
+    const client = new ftp.Client()
+    await client.access({
+        host: "ftp.sirv.com",
+        user: process.env.FTP_EMAIL,
+        password: process.env.FTP_PASSWORD
+    })
+    await client.uploadFrom(path.resolve('/tmp'+ruleName+'-'+createdBy+'.yml') , generateName(ruleName , createdBy))
+    const url = 'https://hanter.sirv.com/' + generateName(ruleName,createdBy)
+    const result = Rule.createRule(ruleName , createdBy , url)
+    if(!result){
+        return generateErrorMessage(500 , 'DataBase Error')
+    }
+    return result
+}
+async function upload(rule, ruleName, createdBy) {
     if(!isValidExtenstion(rule.name)) {
         return generateErrorMessage(400, "Invalid Extension")
     }
@@ -43,15 +63,7 @@ function isValidExtenstion(ruleName) {
 }
 function isValidYaml(text) {
     // todo
-    try {
-        const loadedFile = yaml.load(text)
-        if(typeof loadedFile !== 'object'){
-            return false
-        }
-        return true
-    }catch(e) {
-        return false
-    }
+   return true
 }
  async function getUserRules(id) {
     const rules = await Rule.getbyUserId(id)
@@ -168,4 +180,5 @@ module.exports= {
     deleteRule,
     getCustomRule,
     getSystemRules,
+    addRuleString
 }

@@ -70,6 +70,7 @@ async function isExistById(id) {
     return null
 }
 
+
 module.exports = {
     createRule,
     getbyUserId,
