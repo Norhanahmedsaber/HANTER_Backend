@@ -36,6 +36,27 @@ router.post('/rules', auth, async(req, res) => {
         })
     }
 })
+//create rule with string
+router.post('/rule' ,auth , async(req ,res)=>{
+    const ruleName = req.body.name
+    const createdBy = req.user.id
+    const content = req.body.content
+    try{
+        const result = await ruleServices.addRuleString(ruleName , createdBy , content)
+        if(result.message){
+            return res.status(result.statusCode).send({
+                message: result.message
+            })
+        }
+        res.send(result)
+    }catch(e){
+        console.log(e)
+        res.status(500).send({
+            message: "Internal Server Error, Please Try Again Later"
+        })
+    }
+
+})
 router.delete('/rules', auth, async (req, res) => {
     const ruleName = req.body.name
     const createdBy = req.user.id
@@ -83,4 +104,5 @@ router.get('/system', async (req, res) => {
         })
     }
 })
+
 module.exports = router
