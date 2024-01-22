@@ -2,7 +2,8 @@ const express = require('express')
 const userServices = require ('../services/user')
 const auth = require('../middlewares/auth')
 const router = new express.Router()
-
+const {Octokit} = require("@octokit/rest")
+const octokit = new Octokit() 
 // Sign In
 router.post("/login", async (req,res)=> {
 
@@ -58,5 +59,20 @@ router.get('/profile', auth, async(req, res) => {
     res.status(result.statusCode).send({
         message: result.message
     })
+})
+
+//Get public repos
+
+
+router.get('/user/repos' , auth , async(req,res)=>{
+    try{
+        const username = req.body
+        const {data:repos} = await octokit.repos.listForUser(username )
+        res.send(repos.map(r=>r.name))
+    }catch(err){
+        //console.log(err)
+        res.status(500).json("something went wrong")
+    }
+
 })
 module.exports = router
