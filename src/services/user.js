@@ -24,7 +24,7 @@ async function signIn ({email, password}) {
     
 }
 async function signUp ({ firstName, lastName, email, password, githubAccount }) {
-    if(!firstName || !lastName || !email || !password || !githubAccount) {
+    if(!firstName || !lastName || !email || !password) {
         // Invalid or missing Data
         return userUtils.generateErrorMessage(400, "Missing Required Data")
     }
@@ -46,7 +46,6 @@ async function signUp ({ firstName, lastName, email, password, githubAccount }) 
         lastName:lastName.toLowerCase().trim(),
         email:email.toLowerCase().trim(),
         encryptedpassword,
-        githubAccount:githubAccount.toLowerCase().trim()
     })
     if(!user) {
         return userUtils.generateErrorMessage(500, "An Error Has Occured")

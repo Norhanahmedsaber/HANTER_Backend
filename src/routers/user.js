@@ -27,7 +27,6 @@ router.post("/signup", async (req,res)=> {
         firstName : req.body.firstName ,
         lastName : req.body.lastName ,
         password : req.body.password ,
-        githubAccount : req.body.githubAccount,
         email : req.body.email
     }
     const result = await userServices.signUp(payload)
