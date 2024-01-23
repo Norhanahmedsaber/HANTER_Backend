@@ -18,9 +18,8 @@ async function signIn({ email, password }) {
 
 async function signUp({ firstName, lastName, email, encryptedpassword }) {
     const client = await pool.connect();
-
     const { rows, rowCount } = await client.query('INSERT INTO users (first_name, last_name, email, password) ' + 
-                                        'VALUES ($1, $2, $3, $4) RETURNING id, first_name, last_name, email'
+                                        'VALUES ($1, $2, $3, $4) RETURNING id, first_name, last_name, email',
                                         [firstName, lastName, email, encryptedpassword])
 
     client.release()
