@@ -6,7 +6,6 @@ async function checkGitHubRepo(url) {
     // Extract the owner and repo name from the URL
     const pathMatch = url.match(/github\.com\/([^\/]+)\/([^\/]+)/);
     if (!pathMatch) {
-        console.log('Invalid GitHub URL');
         return false;
     }
 
@@ -23,11 +22,9 @@ async function checkGitHubRepo(url) {
 
         if (response.ok) {
             // The repository is public and the URL is valid
-            console.log('Valid and public GitHub repository');
             return true;
         } else {
             // The repository might not exist or is private
-            console.log('Repository not found or is private');
             return false;
         }
     } catch (error) {
