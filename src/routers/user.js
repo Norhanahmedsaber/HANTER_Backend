@@ -44,7 +44,7 @@ router.get('/users/:id', auth, async (req, res) => {
     const result = await userServices.getById(id)
     if(result.value) {
         return res.send(result.value)
-    }
+    }A
     res.status(result.statusCode).send({
         message: result.message
     })
@@ -74,4 +74,7 @@ router.get('/user/repos' , auth , async(req,res)=>{
     }
 
 })
+
+
+
 module.exports = router
