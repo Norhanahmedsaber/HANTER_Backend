@@ -37,10 +37,14 @@ async function addProject({ name, url, user_id, config, rules }) {
     const projectValidation = await isValidProject({ name, url, user_id, config, rules })
 
     const isValidUrl = await checkGitHubRepo(url)
-
     if (!isValidUrl) {
         return generateErrorMessage(400 ,'The repository is not public. Proceed with the next steps.');
     }
+    if(!validateConfigString(config)){
+        return generateErrorMessage(400 ,'Config is in wrong form');
+    }
+
+
 
     if (projectValidation.message) {
         return generateErrorMessage(projectValidation.statusCode, projectValidation.message)
@@ -88,9 +92,66 @@ async function deleteById(id, userId) {
     }
 }
 
+
+
+function validateConfigString(inputString) {
+    // This will replace all single quotes with double quotes in the string
+    // It also handles escaped single quotes inside the strings
+    const publicArray = ["js"]; 
+    let jsonString = inputString.replace(/'/g, '"');
+
+    let config;
+
+    try {
+        config = JSON.parse(jsonString);
+    } catch (error) {
+        return false;
+    }
+
+    const stringArrayProperties = [
+        "exculdeRules",
+        "exculdeRulesDirs",
+        "ignoredDirs",
+        "extensions",
+        "ignoredPatterns"
+    ];
+
+
+    const isArrayOfStrings = (array) => 
+        Array.isArray(array) && array.every(item => typeof item === "string");
+
+    
+
+    for (const prop of stringArrayProperties) {
+        if (config.hasOwnProperty(prop)) {
+            if (!isArrayOfStrings(config[prop])) {
+                return false;
+            }
+        }
+    }
+
+
+    if (config.hasOwnProperty('extensions')) {
+        for (let extension of config.extensions) {
+            if (!publicArray.includes(extension)) {
+                return false; 
+            }
+        }
+    }
+    
+    
+
+
+    // If all validations pass
+    return true;
+}
+
+
 module.exports = {
     addProject,
     getMyProjects,
     getById,
     deleteById
 }
+
+

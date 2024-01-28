@@ -38,6 +38,7 @@ router.post("/signup", async (req, res) => {
 });
 
 // Get By ID
+
 router.get("/users/:id", auth, async (req, res) => {
   const id = req.params.id;
   const result = await userServices.getById(id);
@@ -48,6 +49,7 @@ router.get("/users/:id", auth, async (req, res) => {
     message: result.message,
   });
 });
+
 // Get My Profile
 router.get("/profile", auth, async (req, res) => {
   const result = await userServices.getProfile(req.user.id);
@@ -96,4 +98,6 @@ router.put('/github',auth,async(req,res)=>{
         res.status(500).json("something went wrong")
     }
 })
+
 module.exports = router
+
