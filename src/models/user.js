@@ -54,9 +54,20 @@ async function isEmailExists(email) {
     }else return false
 }
 
+async function update(github_account,id){
+    const client= await pool.connect();
+    const {rows ,rowCount}=await client.query('UPDATE users SET github_account=$1 WHERE id=$2',[github_account,id])
+    client.release()
+    if(!rowCount){
+        return false
+    }
+    return true
+}
+
 module.exports = {
     signIn,
     signUp,
     isEmailExists,
-    getById
+    getById,
+    update
 }
