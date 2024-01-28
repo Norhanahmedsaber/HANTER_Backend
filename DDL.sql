@@ -9,7 +9,6 @@ CREATE TABLE projects (
     last_scan TIMESTAMP,
     vuls JSON
 );
-
 CREATE TABLE projects_rules (
     project_id INTEGER,
     rule_id INTEGER,

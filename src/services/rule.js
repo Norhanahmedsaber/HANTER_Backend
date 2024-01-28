@@ -7,8 +7,15 @@ const fs = require("fs");
 const path = require("path");
 const { v4: uuidv4 } = require("uuid");
 async function addRule(rule, ruleName, createdBy, public, severity) {
-  if (await ruleExist(ruleName, createdBy)) {
-    return generateErrorMessage(400, "Rule already exists");
+    if(!severity || (severity != 'LOW' && severity != 'MEDUIM' && severity != 'HIGH') ){
+        severity = 'LOW'
+      }
+    
+      if(public != 0 && public != 1){
+        public = 0
+      }
+  if (!(await Rule.isValidName(ruleName, createdBy))) {
+    return generateErrorMessage(400, "Rule name already Exist");
   }
   const id = uuidv4();
   const uploaded = await upload(rule, id);
@@ -30,19 +37,17 @@ async function addRule(rule, ruleName, createdBy, public, severity) {
 }
 // **** 
 async function addRuleString(ruleName, createdBy, rule, public, severity) {
-
+  if (!(await Rule.isValidName(ruleName, createdBy))) {
+    return generateErrorMessage(400, "Rule Name already exist");
+  }
   if(!severity || (severity != 'LOW' && severity != 'MEDUIM' && severity != 'HIGH') ){
     severity = 'LOW'
   }
 
-  if(!public || ( public != 0 && severity != 1 ) ){
-    severity = 0
+  if(public != 0 && public != 1){
+    public = 0
   }
-
-
-  if (await ruleExist(ruleName, createdBy)) {
-    return generateErrorMessage(400, "Rule already exists");
-  }
+  
   fs.writeFileSync(
     path.resolve("/tmp" + ruleName + "-" + createdBy + ".yml"),
     rule
@@ -78,6 +83,9 @@ async function upload(rule, uuid) {
   }
   if (!isValidYaml(rule.data?.toString("utf-8"))) {
     return generateErrorMessage(400, "Invalid rule Syntax");
+  }
+  if (!(await Rule.isValidName(rule.name, rule.created_by))) {
+    generateErrorMessage(400, "Rule name already exist");
   }
   const client = new ftp.Client();
   await client.access({
