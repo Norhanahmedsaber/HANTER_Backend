@@ -60,16 +60,21 @@ router.get("/profile", auth, async (req, res) => {
 });
 
 //Get public repos
-
 router.get('/user/repos' , auth , async(req,res)=>{
     try{
-        const username = req.body
-        console.log(username)
-        const {data:repos} = await octokit.repos.listForUser(username )
+        const username = req.user.github_account
+        if(!username) {
+            return res.status(404).send({
+                message: "Please Authenticate to github"
+            })
+        }
+        const {data:repos} = await octokit.repos.listForUser({username})
         res.send(repos.map(r=>r.name))
     }catch(err){
         console.log(err)
-        res.status(500).json("something went wrong")
+        res.status(500).json({
+            message: "Username Doesn't Exist"
+        })
     }
 })
 
