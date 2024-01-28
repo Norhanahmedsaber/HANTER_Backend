@@ -1,7 +1,8 @@
 const pool=require('../database/postgres')
 async function createProject({name,url,user_id,config,rules}){
     const client = await pool.connect();
-    const {rows,rowCount}=await client.query('INSERT INTO projects (name,url,user_id,config) VALUES($1,$2,$3,$4) RETURNING *', [name,url,user_id,config])
+    let timeStamps = new Date().getTime();
+    const {rows,rowCount}=await client.query('INSERT INTO projects (name,url,user_id,config,last_scan,vuls) VALUES($1,$2,$3,$4,$5,$6) RETURNING *', [name,url,user_id,config,timeStamps,0])
     if(!rowCount) {
         return null
     }
