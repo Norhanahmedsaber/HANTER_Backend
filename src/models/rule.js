@@ -99,7 +99,6 @@ async function isValidName(name, createdBy) {
     [name, 1]
   );
   if (rowCount) {
-    console.log("tok");
     return false;
   }
   const { rows: rows2, rowCount: rowCount2 } = await client.query(
