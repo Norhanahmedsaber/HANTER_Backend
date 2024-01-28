@@ -1,6 +1,8 @@
 const User = require ('../models/user')
 const generateToken = require('../utils/genrateToken')
 const userUtils = require('../utils/accountFields')
+const {Octokit} = require("@octokit/rest")
+const octokit = new Octokit() 
 
 
 async function signIn ({email, password}) {
@@ -79,9 +81,32 @@ async function getProfile(id) {
         value: user
     }
 }
+
+async function updateUser(githubUsername,id){
+    if(! (await usernameValid(githubUsername))){
+         return userUtils.generateErrorMessage(400,"Invalid Username")
+    }
+    const user = await User.update(githubUsername.username,id)
+    if(user){
+        return user
+    }else {
+        return  userUtils.generateErrorMessage(500,"Internal Server Error")
+    }
+}
+async function usernameValid(github_account){
+    try {
+        const {data:repos}=await octokit.repos.listForUser(github_account)
+        return true
+    }
+    catch(err)
+    {
+        return false
+    }
+}
 module.exports = {
     signUp,
     signIn,
     getById,
-    getProfile
+    getProfile,
+    updateUser
 }
