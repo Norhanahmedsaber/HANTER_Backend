@@ -7,6 +7,13 @@ const fs = require("fs");
 const path = require("path");
 const { v4: uuidv4 } = require("uuid");
 async function addRule(rule, ruleName, createdBy, public, severity) {
+    if(!severity || (severity != 'LOW' && severity != 'MEDUIM' && severity != 'HIGH') ){
+        severity = 'LOW'
+      }
+    
+      if(public != 0 && public != 1){
+        public = 0
+      }
   if (await ruleExist(ruleName, createdBy)) {
     return generateErrorMessage(400, "Rule already exists");
   }
@@ -35,8 +42,8 @@ async function addRuleString(ruleName, createdBy, rule, public, severity) {
     severity = 'LOW'
   }
 
-  if(!public || ( public != 0 && severity != 1 ) ){
-    severity = 0
+  if(public != 0 && public != 1){
+    public = 0
   }
 
 
