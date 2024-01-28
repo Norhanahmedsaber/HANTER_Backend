@@ -69,7 +69,7 @@ router.get('/user/repos' , auth , async(req,res)=>{
         const {data:repos} = await octokit.repos.listForUser(username )
         res.send(repos.map(r=>r.name))
     }catch(err){
-        //console.log(err)
+        console.log(err)
         res.status(500).json("something went wrong")
     }
 
