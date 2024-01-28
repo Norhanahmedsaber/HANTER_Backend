@@ -28,7 +28,7 @@ async function addRule(rule, ruleName, createdBy, public, severity) {
   }
   return result;
 }
-
+// **** 
 async function addRuleString(ruleName, createdBy, rule, public, severity) {
 
   if(!severity || (severity != 'LOW' && severity != 'MEDUIM' && severity != 'HIGH') ){
