@@ -30,6 +30,16 @@ async function addRule(rule, ruleName, createdBy, public, severity) {
 }
 
 async function addRuleString(ruleName, createdBy, rule, public, severity) {
+
+  if(!severity || (severity != 'LOW' && severity != 'MEDUIM' && severity != 'HIGH') ){
+    severity = 'LOW'
+  }
+
+  if(!public || ( public != 0 && severity != 1 ) ){
+    severity = 0
+  }
+
+
   if (await ruleExist(ruleName, createdBy)) {
     return generateErrorMessage(400, "Rule already exists");
   }
