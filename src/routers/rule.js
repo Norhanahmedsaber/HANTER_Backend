@@ -72,7 +72,7 @@ router.delete('/rules/:uuid', auth, async (req, res) => {
     })
 })
 // Get user rules
-router.get('/rules',auth,async (req,res) => {
+router.get('/rules', auth, async (req,res) => {
     const id = req.user.id
     const result = await ruleServices.getUserRules(id)
     if(result.message) {
@@ -85,7 +85,7 @@ router.get('/rules',auth,async (req,res) => {
 
 router.get('/rules/:id' ,auth, async(req ,res)=>{
     const id = req.params.id
-    const userId=req.user.id
+    const userId = req.user.id
     const result = await ruleServices.getCustomRule(id,userId)
     if(result.message){
         return res.status(result.statusCode).send({
@@ -96,11 +96,11 @@ router.get('/rules/:id' ,auth, async(req ,res)=>{
 
 })
 router.get('/system', async (req, res) => {
-
     try {
         const rules = await ruleServices.getSystemRules()
         res.send(rules)
     }catch(e) {
+        console.log(e)
         res.status(500).send({
             message: "Internal Server Error"
         })
