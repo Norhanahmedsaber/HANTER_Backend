@@ -3,11 +3,11 @@ const router = new express.Router()
 const auth= require('../middlewares/auth')
 const projectServices = require ('../services/projects')
 
-
+// add project
 router.post('/project',auth,async(req,res) => {
     const payload={
          name:req.body.name,
-         url:req.body.name,
+         url:req.body.url,
          user_id:req.user.id,
          config:req.body.config,
          rules:req.body.rules
