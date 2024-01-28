@@ -66,12 +66,31 @@ router.get('/profile', auth, async(req, res) => {
 router.get('/user/repos' , auth , async(req,res)=>{
     try{
         const username = req.body
+        console.log(username)
         const {data:repos} = await octokit.repos.listForUser(username )
         res.send(repos.map(r=>r.name))
     }catch(err){
         console.log(err)
         res.status(500).json("something went wrong")
     }
+})
 
+router.put('/github',auth,async(req,res)=>{
+    try{
+        const githubUsername=req.body
+        const id=req.user.id
+        const result=  await userServices.updateUser(githubUsername,id)
+        if(result.message){
+           return res.status(result.statusCode).send({
+            message: result.message
+           })
+        }
+        res.send({
+            message: "Authenticated Successfully"
+        })
+    }catch(err){
+        //console.log(err)
+        res.status(500).json("something went wrong")
+    }
 })
 module.exports = router
