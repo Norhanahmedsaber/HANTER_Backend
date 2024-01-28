@@ -28,10 +28,18 @@ async function addRule(rule, ruleName, createdBy, public, severity) {
   }
   return result;
 }
-
+// **** 
 async function addRuleString(ruleName, createdBy, rule, public, severity) {
   if (!(await Rule.isValidName(ruleName, createdBy))) {
     return generateErrorMessage(400, "Rule Name already exist");
+
+  if(!severity || (severity != 'LOW' && severity != 'MEDUIM' && severity != 'HIGH') ){
+    severity = 'LOW'
+  }
+
+  if(!public || ( public != 0 && severity != 1 ) ){
+    severity = 0
+  }
   }
   fs.writeFileSync(
     path.resolve("/tmp" + ruleName + "-" + createdBy + ".yml"),
