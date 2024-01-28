@@ -87,6 +87,7 @@ router.delete("/rules/:uuid", auth, async (req, res) => {
   });
 });
 // Get user rules
+
 router.get("/rules", auth, async (req, res) => {
   const id = req.user.id;
   const result = await ruleServices.getUserRules(id);
