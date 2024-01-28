@@ -5,7 +5,7 @@ async function createRule(name, created_by, url, uuid, public, severity) {
   const client = await pool.connect();
   const { rows, rowCount } = await client.query(
     "INSERT INTO rules (uuid,name,url,created_by,public,severity) " +
-      "VALUES($1,$2,$3,$4,$5) RETURNING *",
+      "VALUES($1,$2,$3,$4,$5,$6) RETURNING *",
     [uuid, name, url, created_by, public, severity]
   );
   client.release();
@@ -92,6 +92,28 @@ async function isExistById(id) {
   return null;
 }
 
+async function isValidName(name, createdBy) {
+  const client = await pool.connect();
+  const { rows, rowCount } = await client.query(
+    "SELECT name FROM rules where name=$1 AND public=$2",
+    [name, 1]
+  );
+  if (rowCount) {
+    console.log("tok");
+    return false;
+  }
+  const { rows: rows2, rowCount: rowCount2 } = await client.query(
+    "SELECT created_by From rules where name=$1 AND created_by=$2",
+    [name, createdBy]
+  );
+  if (rowCount2) {
+    return false;
+  }
+
+  client.release();
+  return true;
+}
+
 module.exports = {
   createRule,
   getbyUserId,
@@ -100,4 +122,5 @@ module.exports = {
   isExisted,
   getSystemRules,
   isExistById,
+  isValidName,
 };
