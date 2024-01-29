@@ -6,6 +6,7 @@ const { Readable } = require("stream");
 const fs = require("fs");
 const path = require("path");
 const { v4: uuidv4 } = require("uuid");
+const syntax=require("../utils/CheckRule")
 async function addRule(rule, ruleName, createdBy, public, severity) {
     if(!severity || (severity != 'LOW' && severity != 'MEDUIM' && severity != 'HIGH') ){
         severity = 'LOW'
