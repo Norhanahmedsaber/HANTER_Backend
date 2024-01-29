@@ -6,6 +6,7 @@ async function checkGitHubRepo(url) {
     // Extract the owner and repo name from the URL
     const pathMatch = url.match(/github\.com\/([^\/]+)\/([^\/]+)/);
     if (!pathMatch) {
+        console.log('Invalid GitHub URL');
         return false;
     }
 
@@ -22,9 +23,11 @@ async function checkGitHubRepo(url) {
 
         if (response.ok) {
             // The repository is public and the URL is valid
+            console.log('Valid and public GitHub repository');
             return true;
         } else {
             // The repository might not exist or is private
+            console.log('Repository not found or is private');
             return false;
         }
     } catch (error) {
@@ -32,7 +35,6 @@ async function checkGitHubRepo(url) {
         return false;
     }
 }
-
 async function addProject({ name, url, user_id, config, rules }) {
     const projectValidation = await isValidProject({ name, url, user_id, config, rules })
 
@@ -62,6 +64,37 @@ async function getMyProjects(id) {
     if (!result) {
         return generateErrorMessage(404, "Projects not found")
     }
+    //console.log(result)
+
+    for (let project of result) {
+        // Calculate the difference between the current date and the old last_scan value
+        const oldDate = new Date(project.last_scan);
+        const currentDate = new Date();
+        const diffInSeconds = Math.floor((currentDate - oldDate) / 1000); 
+        const diffInMinutes = Math.floor(diffInSeconds / 60); 
+        const diffInHours = Math.floor(diffInMinutes / 60); 
+        const diffInDays = Math.floor(diffInHours / 24); 
+        const diffInWeeks = Math.floor(diffInDays / 7); 
+        const diffInMonths = Math.floor(diffInDays / 30); 
+        const diffInYears = Math.floor(diffInDays / 365); 
+    
+        if (diffInYears >= 2) { 
+            project.last_scan = `${diffInYears} years ago`;
+        } else if (diffInMonths >= 2) { 
+            project.last_scan = `${diffInMonths} months ago`;
+        } else if (diffInWeeks >= 2) { 
+            project.last_scan = `${diffInWeeks} weeks ago`;
+        } else if (diffInDays >= 2) { 
+            project.last_scan = `${diffInDays} days ago`;
+        } else if (diffInHours >= 2) {
+            project.last_scan = `${diffInHours} hours ago`;
+        } else if (diffInMinutes >= 2) { 
+            project.last_scan = `${diffInMinutes} minutes ago`;
+        } else {
+            project.last_scan = `${diffInSeconds} seconds ago`;
+        }
+    }
+
     return {
         value: result
     }
@@ -91,9 +124,6 @@ async function deleteById(id, userId) {
         value: "deleted successfuly"
     }
 }
-
-
-
 function validateConfigString(inputString) {
     // This will replace all single quotes with double quotes in the string
     // It also handles escaped single quotes inside the strings
@@ -145,8 +175,6 @@ function validateConfigString(inputString) {
     // If all validations pass
     return true;
 }
-
-
 module.exports = {
     addProject,
     getMyProjects,
