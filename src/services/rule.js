@@ -11,15 +11,16 @@ async function addRule(rule, ruleName, createdBy, public, severity) {
     if(!severity || (severity != 'LOW' && severity != 'MEDUIM' && severity != 'HIGH') ){
         severity = 'LOW'
       }
-    
       if(public != 0 && public != 1){
         public = 0
       }
-  if (!(await Rule.isValidName(ruleName, createdBy))) {
+    if (!(await Rule.isValidName(ruleName, createdBy))) {
     return generateErrorMessage(400, "Rule name already Exist");
-  }
-      if(!syntax.checkRuleSyntax(rule)){
-        return generateErrorMessage(400,'Invalid rule fromat')
+    }
+    const bufferData = Buffer.from(rule.data)
+    const stringData = bufferData.toString('utf-8');
+    if(!syntax.checkRuleSyntax(stringData)){
+        return generateErrorMessage(400,'Invalid rule format')
     }
   const id = uuidv4();
   const uploaded = await upload(rule, id);
@@ -39,7 +40,7 @@ async function addRule(rule, ruleName, createdBy, public, severity) {
   }
   return result;
 }
-// **** 
+
 async function addRuleString(ruleName, createdBy, rule, public, severity) {
   if (!(await Rule.isValidName(ruleName, createdBy))) {
     return generateErrorMessage(400, "Rule Name already exist");
@@ -49,7 +50,7 @@ async function addRuleString(ruleName, createdBy, rule, public, severity) {
   }
 
     if(!syntax.checkRuleSyntax(rule)){
-        return generateErrorMessage(400,'Invalid rule fromat')
+        return generateErrorMessage(400,'Invalid rule format')
     }
   if(public != 0 && public != 1){
     public = 0
