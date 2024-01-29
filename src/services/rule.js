@@ -40,8 +40,8 @@ async function addRuleString(ruleName, createdBy, rule, public, severity) {
   if (!(await Rule.isValidName(ruleName, createdBy))) {
     return generateErrorMessage(400, "Rule Name already exist");
   }
-  if(!severity || (severity != 'LOW' && severity != 'MEDUIM' && severity != 'HIGH') ){
-    severity = 'LOW'
+  if(!severity || (severity != 'ERROR' && severity != 'INFO' && severity != 'WARNING') ){
+    severity = 'ERROR'
   }
 
   if(public != 0 && public != 1){
