@@ -17,6 +17,9 @@ async function addRule(rule, ruleName, createdBy, public, severity) {
   if (!(await Rule.isValidName(ruleName, createdBy))) {
     return generateErrorMessage(400, "Rule name already Exist");
   }
+      if(!syntax.checkRuleSyntax(rule)){
+        return generateErrorMessage(400,'Invalid rule fromat')
+    }
   const id = uuidv4();
   const uploaded = await upload(rule, id);
   if (uploaded.message) {
@@ -44,6 +47,9 @@ async function addRuleString(ruleName, createdBy, rule, public, severity) {
     severity = 'LOW'
   }
 
+    if(!syntax.checkRuleSyntax(rule)){
+        return generateErrorMessage(400,'Invalid rule fromat')
+    }
   if(public != 0 && public != 1){
     public = 0
   }
@@ -76,6 +82,8 @@ async function addRuleString(ruleName, createdBy, rule, public, severity) {
     return generateErrorMessage(500, "DataBase Error");
   }
   return result;
+
+  
 }
 async function upload(rule, uuid) {
   if (!isValidExtenstion(rule.name)) {
@@ -219,6 +227,7 @@ async function getSystemRules() {
   return rules;
 }
 
+
 module.exports = {
   addRule,
   getUserRules,
@@ -227,3 +236,4 @@ module.exports = {
   getSystemRules,
   addRuleString,
 };
+
