@@ -1,21 +1,24 @@
 const Rule = require('../models/rule')
 const { generateErrorMessage } = require('../utils/accountFields')
-const yaml = require('js-yaml')
 const ftp = require('basic-ftp')
 const { Readable } = require('stream')
 const fs = require ('fs')
 const path = require('path')
+const syntax = require ('../utils/CheckRule')
 const {v4: uuidv4} = require('uuid')
 async function addRule(rule, ruleName,createdBy) {
     if(await ruleExist(ruleName,createdBy)){
         return generateErrorMessage(400,"Rule already exists")
+    }
+    if(!syntax.checkRuleSyntax(rule)){
+        return generateErrorMessage(400,'Invalid rule fromat')
     }
     const id = uuidv4()
     const uploaded = await upload(rule, id)
     if(uploaded.message) {
         return generateErrorMessage(uploaded.statusCode, uploaded.message)
     }
-    const result = Rule.createRule(ruleName, createdBy, uploaded, id)
+    const result= Rule.createRule(ruleName, createdBy, uploaded, id)
     if(!result) {
         return generateErrorMessage(500, "Database Error")
     }
@@ -25,6 +28,9 @@ async function addRule(rule, ruleName,createdBy) {
 async function addRuleString(ruleName , createdBy , rule){
     if(await ruleExist(ruleName,createdBy)){
         return generateErrorMessage(400,"Rule already exists")
+    }
+    if(!syntax.checkRuleSyntax(rule)){
+        return generateErrorMessage(400,'Invalid rule fromat')
     }
     fs.writeFileSync(path.resolve('/tmp'+ruleName+'-'+createdBy+'.yml'),rule)
     const client = new ftp.Client()
@@ -36,7 +42,8 @@ async function addRuleString(ruleName , createdBy , rule){
     const uuid = uuidv4()
     await client.uploadFrom(path.resolve('/tmp'+ruleName+'-'+createdBy+'.yml') , uuid)
     const url = 'https://hanter.sirv.com/' + uuid
-    const result = Rule.createRule(ruleName , createdBy , url, uuid)
+    let result
+        result= await Rule.createRule(ruleName , createdBy , url, uuid)
     if(!result){
         return generateErrorMessage(500 , 'DataBase Error')
     }
@@ -172,11 +179,12 @@ async function getSystemRules() {
     return rules
 }
 
+
 module.exports= {
     addRule,
     getUserRules,
     deleteRule,
     getCustomRule,
     getSystemRules,
-    addRuleString
+    addRuleString,
 }
