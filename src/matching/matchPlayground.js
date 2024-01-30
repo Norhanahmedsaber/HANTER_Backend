@@ -8,18 +8,18 @@ import getRules from './rules_parser/get_rules.js'
 import parseRule from './rules_parser/rules_parser.js'
 
 
-export default function hanter(projectId, rules, config){
-    const rulesAsObjects = getRules(rules)
-    for(let rule of rulesAsObjects) {
-        rule = parseRule(rule)
-    }
-    const sourceFiles = getFiles('./' + projectId, parseConfig(config))
+export default function hanter(source, rule){
+    let ruleAsObject = getRules(rule)
+    ruleAsObject = parseRule(ruleAsObject)
     const reports = {reports: []}
-    for(let file of sourceFiles) {
-        match({
-            name: file,
-            ast: parse(extract(file))
-        }, rulesAsObjects, reports)
+    match({
+        name: "playground",
+        ast: parse(source)
+    }, [ruleAsObject], reports)
+    if(reports.reports.length > 0) {
+        for(let report of reports.reports) {
+            report.message = ruleAsObject.message
+        }
     }
     return reports.reports
     //report(Errors.error1)

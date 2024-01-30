@@ -1,10 +1,12 @@
 const Project = require('../models/projects')
 const Rule = require('../models/rule')
+const Report = require('../models/reports')
 const { generateErrorMessage } = require('../utils/accountFields')
 const { isValidProject } = require('../utils/projectFields')
 const shell = require('shelljs')
 const path = require('path')
 const { default: hanter } = require('../matchingLib')
+const fs = require('fs')
 async function checkGitHubRepo(url) {
     // Extract the owner and repo name from the URL
     const pathMatch = url.match(/github\.com\/([^\/]+)\/([^\/]+)/);
@@ -60,9 +62,18 @@ async function addProject({ name, url, user_id, config, rules }) {
     }
 }
 async function scanProject(id, rules, config, url) {
-    const parsedRules = await prepareProject(id, url, rules)
-    hanter(id, parsedRules, config)
-    await deleteRepo(id)
+    try {
+        await Project.updateStatus("PENDING", id)
+        const parsedRules = await prepareProject(id, url, rules)
+        const reports = hanter(id, parsedRules, config)
+        await Report.insertReports(reports, id)
+        await deleteRepo(id)
+        await Project.updateStatus("DONE", id)
+        await Project.updateLastScan(id)
+    }catch (err) {
+        console.log(err)
+        Project.updateStatus("FAILED", id)
+    }
 }
 async function prepareProject(id, url, rules) {
     await clone(id, url)
@@ -84,8 +95,24 @@ async function clone(id, url) {
     shell.exec('git clone ' + url + ' ' + id) 
 }
 async function deleteRepo(id) {
-
+    fs.rmdirSync(path.resolve(path.dirname('./'), './' + id), {
+        recursive: true,
+        force: true
+    })
 }
+var deleteFolderRecursive = function(path) {
+    if( fs.existsSync(path) ) {
+        fs.readdirSync(path).forEach(function(file) {
+          var curPath = path + "/" + file;
+            if(fs.lstatSync(curPath).isDirectory()) { // recurse
+                deleteFolderRecursive(curPath);
+            } else { // delete file
+                fs.unlinkSync(curPath);
+            }
+        });
+        fs.rmdirSync(path);
+      }
+  };
 async function getMyProjects(id) {
     const result = await Project.getMyProjects(id)
     if (!result) {

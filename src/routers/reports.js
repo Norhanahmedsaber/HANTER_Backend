@@ -3,6 +3,7 @@ const router = express.Router()
 const auth = require('../middlewares/auth')
 const Reports = require('../services/reports')
 const reportModel = require('../models/reports')
+const playGroundService = require('../services/playground')
 router.get('/reports/:id' , auth ,  async (req,res)=>{
     try{
         const projectId = req.params.id
@@ -42,6 +43,17 @@ router.post('/reports' , async(req,res)=>{
         res.send("Internal Server error")
     }
 })
-
+router.post('/playground', async (req, res) => {
+    const source = req.body.source
+    const rule = req.body.rule
+    const result = await playGroundService.run(source, rule)
+    if(result.message) {
+        return res.status(result.statusCode).send({
+            message: result.message
+        })
+    }else {
+        return res.send(result)
+    }
+})
 
 module.exports= router

@@ -31,6 +31,17 @@ async function getMyProjects(id) {
     }
     return null
 } 
+async function updateStatus(status, id) {
+    const client = await pool.connect();
+    await client.query('UPDATE projects SET status = $1 WHERE id = $2', [status, id])
+    client.release()
+}
+async function updateLastScan(id) {
+    const client = await pool.connect();
+    let timeStamps = new Date().toISOString().slice(0,19).replace('T', ' ')
+    await client.query('UPDATE projects SET last_scan = $1 WHERE id = $2', [timeStamps, id])
+    client.release()
+}
 async function getById(id){
     const client=await pool.connect();
     const {rows,rowCount}= await client.query('SELECT * FROM projects WHERE id=$1',[id])
@@ -56,5 +67,7 @@ module.exports ={
     createProject,
     getMyProjects,
     getById,
-    deleteById
+    deleteById,
+    updateStatus,
+    updateLastScan
 }
