@@ -38,6 +38,7 @@ CREATE TABLE rules (
 
 );
 
+
 CREATE TABLE reports (
     id SERIAL PRIMARY KEY,
     project_id INTEGER,
