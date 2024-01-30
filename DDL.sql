@@ -3,11 +3,12 @@
 CREATE TABLE projects (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255),
-    config JSON,
+    config VARCHAR(255),
     url VARCHAR(255),
     user_id INTEGER,
     last_scan TIMESTAMP,
-    vuls JSON
+    vuls int,
+    status, VARCHAR()
 );
 CREATE TABLE projects_rules (
     project_id INTEGER,

@@ -3,7 +3,7 @@ function sortReports(reports) {
     const ruleNameMap = {};
   
     // Iterate through the reports and group them by rule_name
-    reports.forEach((report) => {
+    reports?.forEach((report) => {
       const { rule_name } = report;
       if (!ruleNameMap[rule_name]) {
         ruleNameMap[rule_name] = [];
