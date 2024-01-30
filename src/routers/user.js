@@ -77,7 +77,7 @@ router.get('/user/repos' , auth , async(req,res)=>{
             id: r.id,
             name: r.name,
             fullName: r.full_name,
-            url: r.url,
+            url: r.html_url,
             privacy: r.private
           }
 
