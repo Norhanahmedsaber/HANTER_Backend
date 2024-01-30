@@ -1,13 +1,14 @@
 const Project = require('../models/projects')
+const Rule = require('../models/rule')
 const { generateErrorMessage } = require('../utils/accountFields')
 const { isValidProject } = require('../utils/projectFields')
 const shell = require('shelljs')
-
+const path = require('path')
+const { default: hanter } = require('../matchingLib')
 async function checkGitHubRepo(url) {
     // Extract the owner and repo name from the URL
     const pathMatch = url.match(/github\.com\/([^\/]+)\/([^\/]+)/);
     if (!pathMatch) {
-        console.log('Invalid GitHub URL');
         return false;
     }
 
@@ -24,15 +25,12 @@ async function checkGitHubRepo(url) {
 
         if (response.ok) {
             // The repository is public and the URL is valid
-            console.log('Valid and public GitHub repository');
             return true;
         } else {
             // The repository might not exist or is private
-            console.log('Repository not found or is private');
             return false;
         }
     } catch (error) {
-        console.error('Error checking repository:', error);
         return false;
     }
 }
@@ -56,14 +54,37 @@ async function addProject({ name, url, user_id, config, rules }) {
     if (!project) {
         return generateErrorMessage(500, 'Database error')
     }
+    scanProject(project.id, rules, config, url)
     return {
         value: project
     }
 }
-async function clone(url) {
-    const path = ''
-    shell.cd(path)
-    shell.exec('git clone https://github.com/atomicptr/dauntless-builder')
+async function scanProject(id, rules, config, url) {
+    const parsedRules = await prepareProject(id, url, rules)
+    hanter(id, parsedRules, config)
+    await deleteRepo(id)
+}
+async function prepareProject(id, url, rules) {
+    await clone(id, url)
+    return await downloadRules(rules)
+}
+async function downloadRules(rulesIds) {
+    const rulesAsObjects = await Rule.getByIds(rulesIds)
+    const rules = []
+    for(let rule of rulesAsObjects) {
+        const response = await fetch(rule.url)
+        const result = await response.text()
+        rules.push(result)
+    }
+    return rules
+}
+async function clone(id, url) {
+    const dirPath = path.resolve(path.dirname('./'), './repos')
+    shell.cd(dirPath)
+    shell.exec('git clone ' + url + ' ' + id) 
+}
+async function deleteRepo(id) {
+
 }
 async function getMyProjects(id) {
     const result = await Project.getMyProjects(id)
@@ -133,7 +154,7 @@ async function deleteById(id, userId) {
 function validateConfigString(inputString) {
     // This will replace all single quotes with double quotes in the string
     // It also handles escaped single quotes inside the strings
-    const publicArray = ["js"]; 
+    const publicArray = ["js", "jsx"]; 
     let jsonString = inputString.replace(/'/g, '"');
 
     let config;
@@ -185,7 +206,8 @@ module.exports = {
     addProject,
     getMyProjects,
     getById,
-    deleteById
+    deleteById,
+    clone
 }
 
 
