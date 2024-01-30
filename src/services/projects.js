@@ -1,6 +1,7 @@
 const Project = require('../models/projects')
 const { generateErrorMessage } = require('../utils/accountFields')
 const { isValidProject } = require('../utils/projectFields')
+const shell = require('shelljs')
 
 async function checkGitHubRepo(url) {
     // Extract the owner and repo name from the URL
@@ -58,6 +59,11 @@ async function addProject({ name, url, user_id, config, rules }) {
     return {
         value: project
     }
+}
+async function clone(url) {
+    const path = ''
+    shell.cd(path)
+    shell.exec('git clone https://github.com/atomicptr/dauntless-builder')
 }
 async function getMyProjects(id) {
     const result = await Project.getMyProjects(id)
