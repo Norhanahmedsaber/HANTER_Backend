@@ -17,6 +17,7 @@ async function getReports(projectId)
 
 async function insertReports (reports , project_id)
 {
+    console.log(reports)
     const client = await pool.connect()
     const result = []
     for(const report of reports)

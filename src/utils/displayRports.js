@@ -1,4 +1,5 @@
 function sortReports(reports) {
+
   // Create an object to hold reports without rule_name, using rule_name as key
   const reportsMap = {};
 
@@ -9,6 +10,7 @@ function sortReports(reports) {
       // If rule_name doesn't exist in reportsMap, add it
       if (!reportsMap[rule_name]) {
           reportsMap[rule_name] = [];
+
       }
 
       // Push the report without rule_name into the corresponding subarray

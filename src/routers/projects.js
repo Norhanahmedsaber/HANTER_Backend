@@ -87,9 +87,9 @@ router.delete('/project/:id', auth, async (req, res) => {
         })
     }
 })
-router.post("/repo", async (req, res) => {
+router.post("/repo", auth, async (req, res) => {
     const url = req.body.url
-    const result = await projectServices.clone(url)
+    const result = await projectServices.clone(req.user.id, url)
     if (result.message) {
         return res.status(result.statusCode).send({
             message: result.message
