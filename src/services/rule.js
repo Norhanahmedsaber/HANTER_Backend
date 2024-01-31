@@ -6,22 +6,22 @@ const { Readable } = require("stream");
 const fs = require("fs");
 const path = require("path");
 const { v4: uuidv4 } = require("uuid");
-const syntax=require("../utils/CheckRule")
+const syntax = require("../utils/CheckRule")
 async function addRule(rule, ruleName, createdBy, public, severity) {
-    if(!severity || (severity != 'LOW' && severity != 'MEDUIM' && severity != 'HIGH') ){
-        severity = 'LOW'
-      }
-      if(public != 0 && public != 1){
-        public = 0
-      }
-    if (!(await Rule.isValidName(ruleName, createdBy))) {
+  if (!severity || (severity != 'LOW' && severity != 'MEDUIM' && severity != 'HIGH')) {
+    severity = 'LOW'
+  }
+  if (public != 0 && public != 1) {
+    public = 0
+  }
+  if (!(await Rule.isValidName(ruleName, createdBy))) {
     return generateErrorMessage(400, "Rule name already Exist");
-    }
-    const bufferData = Buffer.from(rule.data)
-    const stringData = bufferData.toString('utf-8');
-    if(!syntax.checkRuleSyntax(stringData)){
-        return generateErrorMessage(400,'Invalid rule format')
-    }
+  }
+  const bufferData = Buffer.from(rule.data)
+  const stringData = bufferData.toString('utf-8');
+  if (!syntax.checkRuleSyntax(stringData)) {
+    return generateErrorMessage(400, 'Invalid rule format')
+  }
   const id = uuidv4();
   const uploaded = await upload(rule, id);
   if (uploaded.message) {
@@ -45,17 +45,17 @@ async function addRuleString(ruleName, createdBy, rule, public, severity) {
   if (!(await Rule.isValidName(ruleName, createdBy))) {
     return generateErrorMessage(400, "Rule Name already exist");
   }
-  if(!severity || (severity != 'ERROR' && severity != 'INFO' && severity != 'WARNING') ){
+  if (!severity || (severity != 'ERROR' && severity != 'INFO' && severity != 'WARNING')) {
     severity = 'ERROR'
   }
 
-    if(!syntax.checkRuleSyntax(rule)){
-        return generateErrorMessage(400,'Invalid rule format')
-    }
-  if(public != 0 && public != 1){
+  if (!syntax.checkRuleSyntax(rule)) {
+    return generateErrorMessage(400, 'Invalid rule format')
+  }
+  if (public != 0 && public != 1) {
     public = 0
   }
-  
+
   fs.writeFileSync(
     path.resolve("/tmp" + ruleName + "-" + createdBy + ".yml"),
     rule
@@ -85,7 +85,7 @@ async function addRuleString(ruleName, createdBy, rule, public, severity) {
   }
   return result;
 
-  
+
 }
 async function upload(rule, uuid) {
   if (!isValidExtenstion(rule.name)) {
@@ -230,6 +230,21 @@ async function getSystemRules() {
 }
 
 
+async function getProjectRules(id) {
+  const rulesIds = await Rule.getProjectRules(id)
+  if (rulesIds) {
+    let ids = []
+    rulesIds.map((rule) => ids.push(rule.rule_id))
+    const rules = await Rule.getByIds(ids)
+    if (rules) {
+      return { value: rules }
+    }
+    generateErrorMessage("400", "internal server error")
+  }
+  return { value: [] }
+}
+
+
 module.exports = {
   addRule,
   getUserRules,
@@ -237,5 +252,6 @@ module.exports = {
   getCustomRule,
   getSystemRules,
   addRuleString,
+  getProjectRules
 };
 

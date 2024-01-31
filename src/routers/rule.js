@@ -120,5 +120,16 @@ router.get("/system", async (req, res) => {
     });
   }
 });
+//get rules of project
+router.get("/project_rules/:id", auth, async (req, res) => {
+  const id = req.params.id
+  const result = await ruleServices.getProjectRules(id)
+  if (result.message) {
+    return res.status(400).send({
+      message: result.message
+    })
+  }
+  res.send(result.value)
+})
 
 module.exports = router;
