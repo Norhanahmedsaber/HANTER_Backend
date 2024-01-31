@@ -100,4 +100,21 @@ router.post("/repo", auth, async (req, res) => {
         })  
     }
 })
+router.get("/rescan/:id",auth,async(req,res)=>{
+    try{
+        const id = req.params.id
+        const result= await projectServices.rescan(id)
+        console.log("result",result)
+        if(result.message){
+            return res.status (result.statusCode).send({
+                message:result.message
+            })
+        }
+        res.send({
+            message:result.value
+        })
+    }catch(err){
+        res.status(500).json("something went wrong")
+    }
+})
 module.exports = router

@@ -29,8 +29,18 @@ async function insertReports (reports , project_id)
 
 }
 
-
+async function deleteReports(id){
+    const client = await pool.connect()
+        const {rows , rowCount} = await client.query('DELETE FROM reports where project_id=$1',[id])
+    client.release()
+    if(!rowCount)
+    {
+        return null
+    }
+    return rowCount
+}
 module.exports = {
     getReports,
-    insertReports
+    insertReports,
+    deleteReports
 }
