@@ -174,6 +174,7 @@ async function deleteById(id, userId) {
         return generateErrorMessage(401, "Not Authorized")
     }
     result = await Project.deleteById(id)
+    console.log(result)
     return {
         value: "deleted successfuly"
     }
