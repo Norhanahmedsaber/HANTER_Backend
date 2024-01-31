@@ -4,6 +4,7 @@ const { generateErrorMessage } = require("../utils/accountFields")
 async function getReports(projectId)
 {
     const client = await pool.connect()
+    console.log(projectId)
     const {rows , rowCount} = await client.query('SELECT * FROM reports WHERE project_id=$1', [projectId])
     client.release()
     if(!rowCount)
