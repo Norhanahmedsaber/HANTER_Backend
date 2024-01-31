@@ -67,6 +67,7 @@ async function scanProject(id, rules, config, url) {
         const parsedRules = await prepareProject(id, url, rules)
         const reports = hanter(id, parsedRules, config)
         await Report.insertReports(reports, id)
+        await Project.updateVulsNum(id, reports.length)
         await deleteRepo(id)
         await Project.updateStatus("DONE", id)
         await Project.updateLastScan(id)
@@ -124,25 +125,24 @@ async function getMyProjects(id) {
         // Calculate the difference between the current date and the old last_scan value
         const oldDate = new Date(project.last_scan);
         const currentDate = new Date();
-        const diffInSeconds = Math.floor((currentDate - oldDate) / 1000); 
+        const diffInSeconds = Math.floor((currentDate - oldDate) / 1000) - 7200;  // MINUS 2 HRS because of time zone hussien and anas
         const diffInMinutes = Math.floor(diffInSeconds / 60); 
         const diffInHours = Math.floor(diffInMinutes / 60); 
         const diffInDays = Math.floor(diffInHours / 24); 
         const diffInWeeks = Math.floor(diffInDays / 7); 
         const diffInMonths = Math.floor(diffInDays / 30); 
         const diffInYears = Math.floor(diffInDays / 365); 
-    
-        if (diffInYears >= 2) { 
+        if (diffInYears >= 1) { 
             project.last_scan = `${diffInYears} years ago`;
-        } else if (diffInMonths >= 2) { 
+        } else if (diffInMonths >= 1) { 
             project.last_scan = `${diffInMonths} months ago`;
-        } else if (diffInWeeks >= 2) { 
+        } else if (diffInWeeks >= 1) { 
             project.last_scan = `${diffInWeeks} weeks ago`;
-        } else if (diffInDays >= 2) { 
+        } else if (diffInDays >= 1) { 
             project.last_scan = `${diffInDays} days ago`;
-        } else if (diffInHours >= 2) {
+        } else if (diffInHours >= 1) {
             project.last_scan = `${diffInHours} hours ago`;
-        } else if (diffInMinutes >= 2) { 
+        } else if (diffInMinutes >= 1) { 
             project.last_scan = `${diffInMinutes} minutes ago`;
         } else {
             project.last_scan = `${diffInSeconds} seconds ago`;

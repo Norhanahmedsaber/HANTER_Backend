@@ -6,7 +6,6 @@ export default function getFiles(dirPath, { extensions, ignoredDirs, ignoredPatt
 
   // get the absolute path for the passed relative path 
   const dirAbsolutePath = getAbsolutePath(dirPath)
-  console.log(dirAbsolutePath)
   // check if the directory does not exist 
   if(!fs.existsSync(dirAbsolutePath)) {
       return []

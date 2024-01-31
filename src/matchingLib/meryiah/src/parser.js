@@ -2906,7 +2906,6 @@ function parseParenthesizedArrow(parser, context, scope, params, canAssign, isAs
   return parseArrowFunctionExpression(parser, context, scope, params, isAsync, start, line, column);
 }
 function parseArrowFunctionExpression(parser, context, scope, params, isAsync, start, line, column) {
-  console.log("anas");
   if (parser.flags & 1) (0, _errors.report)(parser, 46);
   (0, _common.consume)(parser, context | 32768, 10);
   context = (context | 15728640) ^ 15728640 | isAsync << 22;
