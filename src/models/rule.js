@@ -115,17 +115,28 @@ async function isValidName(name, createdBy) {
 async function getByIds(ids) {
   const client = await pool.connect();
   const rules = []
-  for(let id of ids) {
+  for (let id of ids) {
     const { rows, rowCount } = await client.query(
       "SELECT * FROM rules where id = $1",
       [id]
     );
-    if(rowCount) {
+    if (rowCount) {
       rules.push(rows[0])
     }
   }
   client.release()
   return rules
+}
+
+async function getProjectRules(id) {
+  const client = await pool.connect()
+  const { rows, rowCount } = await client.query("SELECT rule_id FROM projects_rules WHERE project_id=$1", [id])
+  client.release()
+  if (rowCount) {
+    return rows
+  }
+  return null
+
 }
 module.exports = {
   createRule,
@@ -137,4 +148,5 @@ module.exports = {
   getSystemRules,
   isExistById,
   isValidName,
+  getProjectRules
 };

@@ -1,5 +1,8 @@
 function sortReports(reports) {
-
+if(!reports)
+{
+    return []
+}
   // Create an object to hold reports without rule_name, using rule_name as key
   const reportsMap = {};
 
