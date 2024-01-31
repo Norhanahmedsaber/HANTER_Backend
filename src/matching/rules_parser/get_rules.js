@@ -1,5 +1,9 @@
 import yaml from 'js-yaml'
-export default function getRules(rule)
+export default function getRules(rules)
 {   
-    return yaml.load(rule)
+    const parsedRules = []
+    rules.forEach(element => {
+        parsedRules.push(yaml.load(element))
+    });
+    return parsedRules
 }
