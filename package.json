@@ -6,8 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "swagger-autogen": "node ./docs/swagger.js",
-    "dev": "nodemon index.js",
-    "build-matcher" : "babel src/matching -d src/matchingLib"
+    "dev": "nodemon",
+    "build-matcher": "babel src/matching -d src/matchingLib"
   },
   "keywords": [],
   "author": "",
@@ -23,6 +23,7 @@
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "express-fileupload": "^1.4.3",
+    "hanter": "file:../hanter",
     "js-yaml": "^4.1.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",

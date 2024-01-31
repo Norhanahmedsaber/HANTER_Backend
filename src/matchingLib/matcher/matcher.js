@@ -36,7 +36,8 @@ function matchRule(_ref, rule, reports) {
       filepath: fileName,
       line: match.line,
       col: match.column,
-      rule_name: rule.id
+      rule_name: rule.id,
+      message: rule.message
     });
   }
 }

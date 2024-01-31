@@ -3155,7 +3155,6 @@ function parseParenthesizedArrow(parser, context, scope, params, canAssign, isAs
     return parseArrowFunctionExpression(parser, context, scope, params, isAsync, start, line, column);
 }
 export function parseArrowFunctionExpression(parser, context, scope, params, isAsync, start, line, column) {
-    console.log("anas");
     if (parser.flags & 1)
         report(parser, 46);
     consume(parser, context | 32768, 10);

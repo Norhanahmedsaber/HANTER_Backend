@@ -1389,6 +1389,14 @@ function matchJSXOpeningElement(targetedNode, node) {
   return true;
 }
 function matchLiteral(targetedNode, node) {
+  if (targetedNode.value === ".....") {
+    // Temp
+    return true;
+  }
+  if (targetedNode.value === "ws://.....") {
+    // Temp Ta2eef
+    return true;
+  }
   if (targetedNode.value !== node.value) {
     return false;
   }

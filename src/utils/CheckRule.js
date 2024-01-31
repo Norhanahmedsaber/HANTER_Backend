@@ -6,18 +6,19 @@ function getPattern(ruleJson) {
     delete (ruleJson.id)
     delete (ruleJson.severity)
     delete (ruleJson.message)
-    delete(ruleJson.type)
+    delete (ruleJson.type)
+    delete (ruleJson.language)
     return ruleJson
 }
 
 function checkpattern1(filteredRule) {
-    if (filteredRule.pattern ) {
+    if (filteredRule.pattern) {
         if (typeof filteredRule.pattern !== "string") {
             return false
         }
         return true
     }
-    if ( filteredRule['pattern-not']) {
+    if (filteredRule['pattern-not']) {
         if (!(typeof filteredRule['pattern-not'] === "string")) {
             return false
         }
@@ -27,19 +28,19 @@ function checkpattern1(filteredRule) {
         if (typeof filteredRule.patterns !== "object") {
             return false
         }
-        for (let index in filteredRule.patterns ){
-            if(!checkpattern1(filteredRule.patterns[index])){
+        for (let index in filteredRule.patterns) {
+            if (!checkpattern1(filteredRule.patterns[index])) {
                 return false
             }
         }
         return true
     }
-    if ( filteredRule['pattern-either']) {
+    if (filteredRule['pattern-either']) {
         if (!(typeof filteredRule['pattern-either'] === "object")) {
             return false
         }
-        for(let index in filteredRule['pattern-either']){
-            if(!checkpattern1(filteredRule['pattern-either'][index])){
+        for (let index in filteredRule['pattern-either']) {
+            if (!checkpattern1(filteredRule['pattern-either'][index])) {
                 return false
             }
         }
@@ -61,7 +62,7 @@ function checkRuleSyntax(content) {
             ruleJson.severity = "Error"
         }
         const filteredRule = getPattern(ruleJson)
-        if(Object.keys(filteredRule).length!==1){
+        if (Object.keys(filteredRule).length !== 1) {
             return false
         }
         if (!checkpattern1(filteredRule)) {
