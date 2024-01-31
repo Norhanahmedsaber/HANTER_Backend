@@ -14,7 +14,6 @@ function getFiles(dirPath, _ref) {
     ignoredPatterns = _ref.ignoredPatterns;
   // get the absolute path for the passed relative path 
   var dirAbsolutePath = getAbsolutePath(dirPath);
-  console.log(dirAbsolutePath);
   // check if the directory does not exist 
   if (!_fs["default"].existsSync(dirAbsolutePath)) {
     return [];

@@ -30,6 +30,7 @@ function hanter(projectId, rules, config) {
     _iterator.f();
   }
   var sourceFiles = (0, _file_traverser["default"])('./' + projectId, (0, _parsingconfig["default"])(config));
+  console.log(sourceFiles);
   var reports = {
     reports: []
   };

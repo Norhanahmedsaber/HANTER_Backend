@@ -6,6 +6,6 @@ export default function parse(source)
             loc: true
         })
     }catch(err) {
-        console.log('.....')
+        console.log(err)
     }
 }

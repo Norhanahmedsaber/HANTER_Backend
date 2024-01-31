@@ -7,7 +7,7 @@ if(!reports)
   const reportsMap = {};
 
   // Iterate through the reports and group them by rule_name
-  reports.forEach((report) => {
+  reports?.forEach((report) => {
       const { rule_name, ...rest } = report;
 
       // If rule_name doesn't exist in reportsMap, add it
