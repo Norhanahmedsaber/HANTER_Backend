@@ -66,6 +66,17 @@ async function deleteById(id) {
     client.release()
     return projects[0]
 }
+async function getProject_rules(id){
+    const client =await pool.connect();
+    const {rows,rowCount}= await client.query('SELECT rule_id FROM projects_rules WHERE project_id=$1',[id] )
+    const ruleIds = rows.map(row => row.rule_id)
+    if(!rowCount){
+        return null
+    }
+    console.log("rules",ruleIds)
+    client.release()
+    return ruleIds
+}
 module.exports = {
     createProject,
     getMyProjects,
@@ -73,5 +84,7 @@ module.exports = {
     deleteById,
     updateStatus,
     updateLastScan,
+    getProject_rules,
     updateVulsNum
+
 }

@@ -7,6 +7,9 @@ const shell = require('shelljs')
 const path = require('path')
 const { default: hanter } = require('../matchingLib')
 const fs = require('fs')
+const { json } = require('body-parser')
+const { v4: uuidv4 } = require("uuid");
+
 async function checkGitHubRepo(url) {
     // Extract the owner and repo name from the URL
     const pathMatch = url.match(/github\.com\/([^\/]+)\/([^\/]+)/);
@@ -46,9 +49,6 @@ async function addProject({ name, url, user_id, config, rules }) {
     if(!validateConfigString(config)){
         return generateErrorMessage(400 ,'Config is in wrong form');
     }
-
-
-
     if (projectValidation.message) {
         return generateErrorMessage(projectValidation.statusCode, projectValidation.message)
     }
@@ -61,8 +61,33 @@ async function addProject({ name, url, user_id, config, rules }) {
         value: project
     }
 }
+async function rescan(id){
+    try{
+        console.log("na fe el rescannn")
+        const rulesIds= await Project.getProject_rules(id)
+        if(!rulesIds){
+            return generateErrorMessage(500,'Internal Server Error1 ')
+        }
+        const project=await Project.getById(id)
+        if(!project){
+            return generateErrorMessage(500,'Internal Server Error2 ')
+        }
+        const result=Report.deleteReports(id)
+        if(!result){
+            return generateErrorMessage(500,'Internal Server Error3 ')
+        }
+        scanProject (id,rulesIds,project.config,project.url)
+        return {
+            value: project
+        }
+    }
+    catch(err){
+        return generateErrorMessage(500,"Internal server error4")
+    }
+}
 async function scanProject(id, rules, config, url) {
     try {
+        const new_id = uuidv4();
         await Project.updateStatus("PENDING", id)
         const parsedRules = await prepareProject(id, url, rules)
         const reports = hanter(id, parsedRules, config)
@@ -76,8 +101,8 @@ async function scanProject(id, rules, config, url) {
         Project.updateStatus("FAILED", id)
     }
 }
-async function prepareProject(id, url, rules) {
-    await clone(id, url)
+async function prepareProject(new_id, url, rules) {
+    await clone(new_id, url)
     return await downloadRules(rules)
 }
 async function downloadRules(rulesIds) {
@@ -90,13 +115,13 @@ async function downloadRules(rulesIds) {
     }
     return rules
 }
-async function clone(id, url) {
+async function clone(new_id, url) {
     const dirPath = path.resolve(path.dirname('./'), './repos')
     shell.cd(dirPath)
-    shell.exec('git clone ' + url + ' ' + id) 
+    shell.exec('git clone ' + url + ' ' + new_id) 
 }
-async function deleteRepo(id) {
-    fs.rmdirSync(path.resolve(path.dirname('./'), './' + id), {
+async function deleteRepo(new_id) {
+    fs.rmdirSync(path.resolve(path.dirname('./'), './' + new_id), {
         recursive: true,
         force: true
     })
@@ -235,7 +260,8 @@ module.exports = {
     getMyProjects,
     getById,
     deleteById,
-    clone
+    clone,
+    rescan
 }
 
 
