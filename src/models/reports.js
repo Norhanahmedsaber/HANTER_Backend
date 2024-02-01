@@ -20,7 +20,7 @@ async function insertReports (reports , project_id)
     const result = []
     for(const report of reports)
     {
-        const {rows , rowCount} = await client.query('INSERT INTO reports (filepath , line , col , rule_name, message, project_id ) VALUES ($1 , $2 ,$3 ,$4, $5, $6)' , [report.filepath , report.line , report.col , report.rule_name ,report.message, project_id])
+        const {rows , rowCount} = await client.query('INSERT INTO reports (filepath , line , col , rule_name,  project_id ) VALUES ($1 , $2 ,$3 ,$4, $5)' , [report.filepath , report.line , report.col , report.rule_name , project_id])
         result.push(rows )
     }
     client.release()
