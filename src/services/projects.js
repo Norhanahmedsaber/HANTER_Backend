@@ -89,7 +89,7 @@ async function scanProject(id, rules, config, url) {
     try {
         const new_id = uuidv4();
         await Project.updateStatus("PENDING", id)
-        const parsedRules = await prepareProject(id, url, rules)
+        const parsedRules = await prepareProject(new_id, url, rules)
         const reports = hanter(id, parsedRules, config)
         await Report.insertReports(reports, id)
         await Project.updateVulsNum(id, reports.length)
