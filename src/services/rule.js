@@ -40,7 +40,35 @@ async function addRule(rule, ruleName, createdBy, public, severity) {
   }
   return result;
 }
-
+async function addSystemRule(rule, ruleName, public, severity) {
+  if (!severity || (severity != 'LOW' && severity != 'MEDUIM' && severity != 'HIGH')) {
+    severity = 'LOW'
+  }
+  if (public != 0 && public != 1) {
+    public = 0
+  }
+  const bufferData = Buffer.from(rule.data)
+  const stringData = bufferData.toString('utf-8');
+  if (!syntax.checkRuleSyntax(stringData)) {
+    return generateErrorMessage(400, 'Invalid rule format')
+  }
+  const id = uuidv4();
+  const uploaded = await upload(rule, id);
+  if (uploaded.message) {
+    return generateErrorMessage(uploaded.statusCode, uploaded.message);
+  }
+  const result = Rule.createSystemRule(
+    ruleName,
+    uploaded,
+    id,
+    public,
+    severity
+  );
+  if (!result) {
+    return generateErrorMessage(500, "Database Error");
+  }
+  return result;
+}
 async function addRuleString(ruleName, createdBy, rule, public, severity) {
   if (!(await Rule.isValidName(ruleName, createdBy))) {
     return generateErrorMessage(400, "Rule Name already exist");
@@ -252,6 +280,7 @@ module.exports = {
   getCustomRule,
   getSystemRules,
   addRuleString,
-  getProjectRules
+  getProjectRules,
+  addSystemRule
 };
 
