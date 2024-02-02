@@ -1,12 +1,25 @@
 const { query } = require("express");
 const pool = require("../database/postgres");
 
-async function createRule(name, created_by, url, uuid, public, severity) {
+async function createRule(name, created_by, url, uuid,  public, severity) {
   const client = await pool.connect();
   const { rows, rowCount } = await client.query(
     "INSERT INTO rules (uuid,name,url,created_by,public,severity) " +
     "VALUES($1,$2,$3,$4,$5,$6) RETURNING *",
     [uuid, name, url, created_by, public, severity]
+  );
+  client.release();
+  if (rowCount) {
+    return rows[0];
+  }
+  return null;
+}
+async function createSystemRule(name, url, uuid, public, severity) {
+  const client = await pool.connect();
+  const { rows, rowCount } = await client.query(
+    "INSERT INTO rules (uuid,name,url,public,severity) " +
+    "VALUES($1,$2,$3,$4,$5) RETURNING *",
+    [uuid, name, url, public, severity]
   );
   client.release();
   if (rowCount) {
@@ -21,9 +34,7 @@ async function getbyUserId(id) {
     [id]
   );
   client.release();
-  if (rowCount) {
-    return rows;
-  }
+  return rows;
 }
 async function deleteRule(uuid) {
   const client = await pool.connect();
@@ -74,7 +85,7 @@ async function getById(id) {
 async function getSystemRules() {
   const client = await pool.connect();
   const { rows } = await client.query(
-    "SELECT name , id FROM rules WHERE created_by IS NULL"
+    "SELECT * FROM rules WHERE created_by IS NULL"
   );
   client.release();
   return rows;
@@ -140,6 +151,7 @@ async function getProjectRules(id) {
 }
 module.exports = {
   createRule,
+  createSystemRule,
   getbyUserId,
   deleteRule,
   getById,

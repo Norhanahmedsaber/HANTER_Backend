@@ -44,6 +44,42 @@ router.post("/rules", auth, async (req, res) => {
     });
   }
 });
+// create rule (uploaded file)
+router.post("/system", async (req, res) => {
+  const ruleName = req.body.name;
+  const public = req.body.public;
+  const severity = req.body.severity;
+  if (!req.files) {
+    return res.status(400).send({
+      message: "No File Uploaded",
+    });
+  }
+  if (!req.files.rule) {
+    return res.status(400).send({
+      message: "No File Uploaded",
+    });
+  }
+  const rule = req.files.rule;
+  try {
+    const result = await ruleServices.addSystemRule(
+      rule,
+      ruleName,
+      public,
+      severity
+    );
+    if (result.message) {
+      return res.status(result.statusCode).send({
+        message: result.message,
+      });
+    }
+    res.send(result);
+  } catch (e) {
+    console.log(e);
+    res.status(500).send({
+      message: "Internal Server Error, Please Try Again Later",
+    });
+  }
+});
 //create rule with string
 router.post("/rule", auth, async (req, res) => {
   const ruleName = req.body.name;
