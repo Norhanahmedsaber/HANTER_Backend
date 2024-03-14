@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", {
 exports["default"] = match;
 var _abstractSyntaxTree = _interopRequireDefault(require("abstract-syntax-tree"));
 var _evaluate = _interopRequireDefault(require("./evaluate.js"));
-var _matchingAlgorithms = _interopRequireDefault(require("./matchingAlgorithms2.js"));
+var _matchingAlgorithms = _interopRequireDefault(require("./matchingAlgorithms3.js"));
 var _helpers = require("./helpers.js");
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
@@ -29,7 +29,8 @@ function match(file, rules, reports) {
 function matchRule(_ref, rule, reports) {
   var fileName = _ref.name,
     ast = _ref.ast;
-  var logicBlock = createLogicContainer(rule, ast);
+  var metaVariables = [];
+  var logicBlock = createLogicContainer(rule, ast, metaVariables);
   var match = (0, _evaluate["default"])(logicBlock);
   if (match) {
     reports.reports.push({
@@ -41,7 +42,7 @@ function matchRule(_ref, rule, reports) {
     });
   }
 }
-function matchPattern(fileAST, pattern) {
+function matchPattern(fileAST, pattern, metaVariables) {
   var targetedNode;
   var AST;
   if (pattern.pattern) {
@@ -72,7 +73,8 @@ function matchPattern(fileAST, pattern) {
         targetedNode = targetedNode.expression;
       }
       if (node.type === targetedNode.type) {
-        if (_matchingAlgorithms["default"][targetedNode.type](targetedNode, node)) {
+        var childs = {};
+        if (_matchingAlgorithms["default"][targetedNode.type](targetedNode, node, metaVariables, childs)) {
           match = node.loc.start;
         }
       }
@@ -87,38 +89,38 @@ function report(fileName, info, reports) {
     reports.reports[fileName] = [info];
   }
 }
-function createLogicContainer(rule, ast) {
-  return processPattern(rule, ast);
+function createLogicContainer(rule, ast, metaVariables) {
+  return processPattern(rule, ast, metaVariables);
 }
-function processPattern(rule, ast) {
+function processPattern(rule, ast, metaVariables) {
   if (rule.patterns) {
     return {
       type: "AND",
       value: rule.patterns.map(function (p) {
-        return processPattern(p, ast);
+        return processPattern(p, ast, metaVariables);
       })
     };
   } else if (rule['pattern-either']) {
     return {
       type: "OR",
       value: rule['pattern-either'].map(function (p) {
-        return processPattern(p, ast);
+        return processPattern(p, ast, metaVariables);
       })
     };
   } else {
-    return convertSinglePattern(rule, ast);
+    return convertSinglePattern(rule, ast, metaVariables);
   }
 }
-function convertSinglePattern(pattern, ast) {
+function convertSinglePattern(pattern, ast, metaVariables) {
   if (pattern.pattern) {
     return {
       type: 'pattern',
-      value: matchPattern(ast, pattern)
+      value: matchPattern(ast, pattern, metaVariables)
     }; // Placeholder for actual pattern match
   } else if (pattern['pattern-not']) {
     return {
       type: 'pattern',
-      value: !matchPattern(ast, pattern)
+      value: !matchPattern(ast, pattern, metaVariables)
     }; // Placeholder for pattern not match
   }
   // Add more conditions here for other pattern types like pattern-inside, pattern-regex, etc.
