@@ -23,6 +23,7 @@ function matchVariableDeclaration(targetedNode, node, metaVariables, childs) {
     if (targetedNode.declarations.length > node.declarations.length) { // yoyo
         return false
     }
+    childs.declarations = []
     for (let targetedVariableDeclarator of targetedNode.declarations) {
         let variableDeclaratorFound = false
         for (let nodeVariableDeclarator of node.declarations) {
@@ -48,19 +49,19 @@ function matchVariableDeclarator(targetedNode, node, metaVariables, childs) {
     switch (variableDeclaratorId[targetedNode.id.type]) {
         case 'Identifier':
             if (!matchIdentifier(targetedNode.id, node.id, metaVariables, childs.id)) {
-                clearMeta(childs,metaVariables)
+                clearMeta(childs, metaVariables)
                 return false
             }
             break;
         case 'Expression':
             if (!matchExpression(targetedNode.id, node.id, metaVariables, childs.id)) {
-                clearMeta(childs,metaVariables)
+                clearMeta(childs, metaVariables)
                 return false
             }
             break;
         case 'BindingPattern':
             if (!matchBindingPattern(targetedNode.id, node.id, metaVariables, childs.id)) {
-                clearMeta(childs,metaVariables)
+                clearMeta(childs, metaVariables)
                 return false
             }
             break;
@@ -110,33 +111,34 @@ function matchArrowFunctionExpression(targetedNode, node, metaVariables, childs)
         return false
     }
     // Params
-    //yoyoo
-    if (!matchParameters(targetedNode.params, node.params, metaVariables, childs)) {
+    childs.parameters = []
+    if (!matchParameters(targetedNode.params, node.params, metaVariables, childs.parameters)) {
         return false
     }
     // Body
-    childs.body={}
+    childs.body = {}
     if (targetedNode.body.type == "General" && node.body.type !== "BlockStatement") {
         return true
     }
     if (targetedNode.body.type !== node.body.type) {
         return false
     }
-    
+
     if (targetedNode.body.type === 'BlockStatement') {
         if (!matchBlockStatement(targetedNode.body, node.body, metaVariables, childs.body)) {
-            clearMeta(childs,metaVariables)
+            clearMeta(childs, metaVariables)
             return false
         }
     } else {
         if (!matchExpression(targetedNode.body, node.body, metaVariables, childs.body)) {
-            clearMeta(childs,metaVariables)
+            clearMeta(childs, metaVariables)
             return false
         }
     }
     return true
 }
 function matchParameters(targetedParams, nodeParams, metaVariables, childs) {
+    // this child is array
     if (argumentsIncludesGeneral(targetedParams)) { // GENERAL CASE
         if (noOfnotGeneralArgs(targetedParams) > nodeParams.length) {
             return false
@@ -156,7 +158,9 @@ function matchParameters(targetedParams, nodeParams, metaVariables, childs) {
                     continue
                 }
                 // matching
-                if (!matchParameter(nextTargetedParam, nodeParam, metaVariables, childs)) {
+                const child = {}
+                childs.push(child)
+                if (!matchParameter(nextTargetedParam, nodeParam, metaVariables, child)) {
                     nodeParamIndex++;
                     continue
                 }
@@ -167,7 +171,10 @@ function matchParameters(targetedParams, nodeParams, metaVariables, childs) {
                 if (!targetedParam) {
                     return false
                 }
-                if (!matchParameter(targetedParam, nodeParam, metaVariables, childs)) {
+                const child = {}
+                childs.push(child)
+                if (!matchParameter(targetedParam, nodeParam, metaVariables, child)) {
+                    clearMeta(childs, metaVariables)
                     return false
                 }
                 found++;
@@ -181,7 +188,10 @@ function matchParameters(targetedParams, nodeParams, metaVariables, childs) {
             return false
         }
         for (let index in targetedParams) {
-            if (!matchParameter(targetedParams[index], nodeParams[index], metaVariables, childs)) {
+            const child = {}
+            childs.push(child)
+            if (!matchParameter(targetedParams[index], nodeParams[index], metaVariables, child)) {
+                clearMeta(childs, metaVariables)
                 return false
             }
         }
@@ -215,7 +225,7 @@ function matchContinueStatement(targetedNode, node, metaVariables, childs) {
         if (targetedNode.label !== node.label) {
             return false
         }
-        childs.label={}
+        childs.label = {}
         switch (targetedNode.label) {
             case "Identifier":
                 if (!matchIdentifier(targetedNode.label, node.label, metaVariables, childs.label)) {
@@ -337,11 +347,16 @@ function matchSwitchStatement(targetedNode, node, metaVariables, childs) {
         return false
     }
     //cases
-    for (let targetedCase of targetedNode.cases) { // yoyo
+    childs.cases = []
+    for (let targetedCase of targetedNode.cases) {
         let found = false
         for (let nodeCase of node.cases) {
-            if (matchSwitchCase(targetedCase, nodeCase, metaVariables, childs)) {
+            const child = {}
+            childs.cases.push(child)
+            if (matchSwitchCase(targetedCase, nodeCase, metaVariables, child)) {
                 found = true
+            } else {
+                clearMeta(child, metaVariables)
             }
         }
         if (!found) {
@@ -400,27 +415,30 @@ function matchTryStatement(targetedNode, node, metaVariables, childs) {
 function matchCatchClause(targetedNode, node, metaVariables, childs) {
 
     // body
-    childs.body={}
+    childs.body = {}
     if (!matchBlockStatement(targetedNode.body, node.body, metaVariables, childs.body)) {
         return false
     }
 
     // param
-    if (targetedNode.param && node.param) { //yoyo
+    if (targetedNode.param && node.param) {
         if (targetedNode.param.type === "General") {
             return true
         }
         if (targetedNode.param.type !== node.param.type) {
             return false
         }
+        childs.param = {}
         switch (targetedNode.param) {
             case 'Identifier':
-                if (!matchIdentifier(targetedNode.param, node.param, metaVariables, childs)) {
+                if (!matchIdentifier(targetedNode.param, node.param, metaVariables, childs.param)) {
+                    clearMeta(childs, metaVariables)
                     return false
                 }
                 break;
             default: // Binding Pattern
-                if (!matchBindingPattern(targetedNode.param, node.param, metaVariables, childs)) {
+                if (!matchBindingPattern(targetedNode.param, node.param, metaVariables, childs.param)) {
+                    clearMeta(childs, metaVariables)
                     return false
                 }
                 break
@@ -462,9 +480,9 @@ function matchDoWhileStatement(targetedNode, node, metaVariables, childs) {
         return false
     }
     //body
-    childs.body={}
+    childs.body = {}
     if (!matchStatement(targetedNode.body, node.body, metaVariables, childs.body)) {
-        clearMeta(childs,metaVariables)
+        clearMeta(childs, metaVariables)
         return false
     }
     return true
@@ -472,23 +490,23 @@ function matchDoWhileStatement(targetedNode, node, metaVariables, childs) {
 
 function matchForInStatement(targetedNode, node, metaVariables, childs) {
     // left
-    childs.left={} 
+    childs.left = {}
     if (!matchForInitialiser(targetedNode.left, node.left, metaVariables, childs.left)) {
-        clearMeta(childs,metaVariables)
+        clearMeta(childs, metaVariables)
         return false
     }
 
     //right
-    childs.right={}
+    childs.right = {}
     if (!matchExpression(targetedNode.right, node.right, metaVariables, childs.right)) {
-        clearMeta(childs,metaVariables)
+        clearMeta(childs, metaVariables)
         return false
     }
 
     //body
-    childs.body={}
+    childs.body = {}
     if (!matchStatement(targetedNode.body, node.body, metaVariables, childs.body)) {
-        clearMeta(childs,metaVariables)
+        clearMeta(childs, metaVariables)
         return false
     }
     return true
@@ -515,24 +533,24 @@ function matchForInitialiser(targetedNode, node, metaVariables, childs) {
     return true
 }
 function matchForOfStatement(targetedNode, node, metaVariables, childs) {
-    childs.left={}
+    childs.left = {}
     // left 
     if (!matchForInitialiser(targetedNode.left, node.left, metaVariables, childs.left)) {
-        clearMeta(childs,metaVariables)
+        clearMeta(childs, metaVariables)
         return false
     }
 
     //right
-    childs.right={}
+    childs.right = {}
     if (!matchExpression(targetedNode.right, node.right, metaVariables, childs.right)) {
-        clearMeta(childs,metaVariables)
+        clearMeta(childs, metaVariables)
         return false
     }
 
     //body
-    childs.body={}
+    childs.body = {}
     if (!matchStatement(targetedNode.body, node.body, metaVariables, childs.body)) {
-        clearMeta(childs,metaVariables)
+        clearMeta(childs, metaVariables)
         return false
     }
 
@@ -762,11 +780,15 @@ function matchIterationStatement(targetedNode, node, metaVariables, childs) {
     return true
 }
 function matchArguments(targetedNode, node, metaVariables, childs) {
+    // childs are array
     if (targetedNode.length > node.length) {
         return false
     }
     for (let index in targetedNode) {
-        if (!matchExpression(targetedNode[index], node[index], metaVariables, childs)) {
+        const child = {}
+        childs.push(child)
+        if (!matchExpression(targetedNode[index], node[index], metaVariables, child)) {
+            clearMeta(child, metaVariables)
             return false
         }
     }
@@ -779,26 +801,31 @@ function matchParameter(targetedNode, node, metaVariables, childs) {
     switch (targetedNode.type) {
         case 'Identifier':
             if (!matchIdentifier(targetedNode, node, metaVariables, childs)) {
+                clearMeta(childs, metaVariables)
                 return false
             }
             break;
         case 'AssignmentPattern':
             if (!matchAssignmentPattern(targetedNode, node, metaVariables, childs)) {
+                clearMeta(childs, metaVariables)
                 return false
             }
             break;
         case 'RestElement':
             if (!matchRestElement(targetedNode, node, metaVariables, childs)) {
+                clearMeta(childs, metaVariables)
                 return false
             }
             break;
         case 'ArrayPattern':
             if (!matchObjectPattern(targetedNode, node, metaVariables, childs)) {
+                clearMeta(childs, metaVariables)
                 return false
             }
             break;
         case 'ObjectPattern':
             if (!matchArrayPattern(targetedNode, node, metaVariables, childs)) {
+                clearMeta(childs, metaVariables)
                 return false
             }
             break;
@@ -806,13 +833,13 @@ function matchParameter(targetedNode, node, metaVariables, childs) {
     return true
 }
 function matchAssignmentPattern(targetedNode, node, metaVariables, childs) {
-    console.log(childs)
     if (targetedNode.right && !node.right) {
         return false
     }
+    childs.right = {}
     if (targetedNode.right) {
-        if (!matchExpression(targetedNode, node, metaVariables, childs)) {
-            console.log(childs)
+        if (!matchExpression(targetedNode.right, node.right, metaVariables, childs.right)) {
+            clearMeta(childs, metaVariables)
             return false
         }
     }
@@ -822,21 +849,23 @@ function matchAssignmentPattern(targetedNode, node, metaVariables, childs) {
     if (targetedNode.left.type !== node.left.type) {
         return false
     }
+    childs.left = {}
     switch (targetedNode.left.type) {
         case 'Identifier':
-            if (!matchIdentifier(targetedNode, node, metaVariables, childs)) {
-                console.log(childs)
+            if (!matchIdentifier(targetedNode.left, node.left, metaVariables, childs.left)) {
+                clearMeta(childs, metaVariables)
                 return false
             }
             break;
         case 'ArrayPattern':
-            if (!matchArrayPattern(targetedNode, node, metaVariables, childs)) {
-                console.log(childs)
+            if (!matchArrayPattern(targetedNode.left, node.left, metaVariables, childs.left)) {
+                clearMeta(childs, metaVariables)
                 return false
             }
             break;
         case 'ObjectPattern':
-            if (!matchObjectPattern(targetedNode, node, metaVariables, childs)) {
+            if (!matchObjectPattern(targetedNode.left, node.left, metaVariables, childs.left)) {
+                clearMeta(childs, metaVariables)
                 return false
             }
             break;
@@ -845,7 +874,7 @@ function matchAssignmentPattern(targetedNode, node, metaVariables, childs) {
 }
 function matchAssignmentExpression(targetedNode, node, metaVariables, childs) {
     if (targetedNode.operator !== node.operator) {
-        clearMeta(childs,metaVariables)
+        clearMeta(childs, metaVariables)
         return false
     }
     childs.left = {}
@@ -924,7 +953,8 @@ function matchNewExpression(targtedNode, node, metaVariables, childs) {
         return false
     }
     // arguments
-    if (!matchArguments(targtedNode.arguments, node.arguments, metaVariables, childs)) { // yoyo
+    childs.arguments = []
+    if (!matchArguments(targtedNode.arguments, node.arguments, metaVariables, childs.arguments)) {
         clearMeta(childs, metaVariables)
         return false
     }
@@ -1017,9 +1047,9 @@ function matchSequenceExpression(targetedNode, node, metaVariables, childs) {
 function matchAwaitExpression(targetedNode, node, metaVariables, childs) {
     // moseeba our meriyah doesnt read await as reserved word
     //argument
-    childs.argument={}
+    childs.argument = {}
     if (!matchExpression(targetedNode.argument, node.argument, metaVariables, childs.argument)) {
-        clearMeta(childs,metaVariables)
+        clearMeta(childs, metaVariables)
         return false
     }
     return true
@@ -1098,15 +1128,16 @@ function matchCallExpression(targetedNode, node, metaVariables, childs) {
         }
     }
     else {
-        childs.callee={}
+        childs.callee = {}
         if (!matchExpression(targetedNode.callee, node.callee, metaVariables, childs.callee)) {
-            clearMeta(childs,metaVariables)
+            clearMeta(childs, metaVariables)
             return false
         }
     }
 
     // arguments
-    if (argumentsIncludesGeneral(targetedNode.arguments)) { //yoyo
+    childs.arguments = []
+    if (argumentsIncludesGeneral(targetedNode.arguments)) {
         // General Found
         if (noOfnotGeneralArgs(targetedNode.arguments) > node.arguments.length) {
             return false
@@ -1132,14 +1163,20 @@ function matchCallExpression(targetedNode, node, metaVariables, childs) {
 
                 }
                 if (nextTargetedArgument.type == 'SpreadElement') {
-                    if (!matchSpreadElement(nextTargetedArgument, nodeArgument, metaVariables, childs)) {
+                    const child = {}
+                    childs.arguments.push(child)
+                    if (!matchSpreadElement(nextTargetedArgument, nodeArgument, metaVariables, child)) {
                         nodeArgumentIndex++;
+                        clearMeta(child, metaVariables)
                         continue;
 
                     }
                 } else {
-                    if (!matchExpression(nextTargetedArgument, nodeArgument, metaVariables, childs)) {
+                    const child = {}
+                    childs.arguments.push(child)
+                    if (!matchExpression(nextTargetedArgument, nodeArgument, metaVariables, child)) {
                         nodeArgumentIndex++;
+                        clearMeta(child, metaVariables)
                         continue;
 
                     }
@@ -1157,12 +1194,18 @@ function matchCallExpression(targetedNode, node, metaVariables, childs) {
 
                 }
                 if (targetedArgument.type == 'SpreadElement') {
-                    if (!matchSpreadElement(targetedArgument, nodeArgument, metaVariables, childs)) {
+                    const child = {}
+                    childs.arguments.push(child)
+                    if (!matchSpreadElement(targetedArgument, nodeArgument, metaVariables, child)) {
+                        clearMeta(child, metaVariables)
                         return false
 
                     }
                 } else {
-                    if (!matchExpression(targetedArgument, nodeArgument, metaVariables, childs)) {
+                    const child = {}
+                    childs.arguments.push(child)
+                    if (!matchExpression(targetedArgument, nodeArgument, metaVariables, child)) {
+                        clearMeta(child, metaVariables)
                         return false
 
                     }
@@ -1184,12 +1227,18 @@ function matchCallExpression(targetedNode, node, metaVariables, childs) {
 
             }
             if (targetedNode.arguments[index].type == 'SpreadElement') {
-                if (!matchSpreadElement(targetedNode.arguments[index], node.arguments[index], metaVariables, childs)) {
+                const child = {}
+                childs.arguments.push(child)
+                if (!matchSpreadElement(targetedNode.arguments[index], node.arguments[index], metaVariables, child)) {
+                    clearMeta(child, metaVariables)
                     return false
 
                 }
             } else {
-                if (!matchExpression(targetedNode.arguments[index], node.arguments[index], metaVariables, childs)) {
+                const child = {}
+                childs.arguments.push(child)
+                if (!matchExpression(targetedNode.arguments[index], node.arguments[index], metaVariables, child)) {
+                    clearMeta(child)
                     return false
 
                 }
@@ -1278,14 +1327,15 @@ function matchFunctionDeclarationBase(targetedNode, node, metaVariables, childs)
         return false
     }
     // params
-    if (!matchParameters(targetedNode.params, node.params, metaVariables, childs)) {//yoyo
+    childs.parameters = []
+    if (!matchParameters(targetedNode.params, node.params, metaVariables, childs.parameters)) {
         return false
     }
     //body
-    childs.body={}
+    childs.body = {}
     if (targetedNode.body) {
         if (!matchBlockStatement(targetedNode.body, node.body, metaVariables, childs.body)) {
-            clearMeta(childs,metaVariables)
+            clearMeta(childs, metaVariables)
             return false
         }
     }
@@ -1453,25 +1503,31 @@ function matchPrimaryExpression(targetedNode, node, metaVariables, childs) {
     }
     return true
 }
-function matchArrayExpression(targetedNode, node, metaVariables, childs) { //yoyo
+function matchArrayExpression(targetedNode, node, metaVariables, childs) {
+    childs.elements = []
     for (let index in targetedNode.elements) {
         if (targetedNode.elements[index] !== null && node.elements[index] !== null) {
             if (!node.elements[index]) {
                 return false
             }
-            if (targetedNode.elements[index].type === node.elements[index].type)
+            if (targetedNode.elements[index].type === node.elements[index].type){
+                const child = {}
+                childs.elements.push(child)
                 switch (targetedNode.elements[index].type) {
                     case 'SpreadElement':
-                        if (!matchSpreadElement(targetedNode.elements[index], node.elements[index], metaVariables, childs)) {
+                        if (!matchSpreadElement(targetedNode.elements[index], node.elements[index], metaVariables, child)) {
+                            clearMeta(child, metaVariables)
                             return false
                         }
                         break;
                     default:
-                        if (!matchExpression(targetedNode.elements[index], node.elements[index], metaVariables, childs)) {
+                        if (!matchExpression(targetedNode.elements[index], node.elements[index], metaVariables, child)) {
+                            clearMeta(child, metaVariables)
                             return false
                         }
                         break;
                 }
+            }
         }
 
     }
@@ -1522,15 +1578,21 @@ function matchMetaProperty(targetedNode, node, metaVariables, childs) {
 }
 
 function matchObjectExpression(targetedNode, node, metaVariables, childs) {
-    for (let targetedProperty of targetedNode.properties) { // yoyo
+    childs.properties = []
+    for (let targetedProperty of targetedNode.properties) {
         let found = false
         for (let nodeProperty of node.properties) {
-            if (matchObjectLiteralElementLike(targetedProperty, nodeProperty, metaVariables, childs)) {
+            const child = {}
+            childs.properties.push(child)
+            if (matchObjectLiteralElementLike(targetedProperty, nodeProperty, metaVariables, child)) {
                 found = true
                 break;
+            }else {
+                clearMeta(child, metaVariables)
             }
         }
         if (!found) {
+            clearMeta(childs, metaVariables)
             return false
         }
     }
@@ -1680,15 +1742,21 @@ function matchObjectLiteralElementLike(targetedNode, node, metaVariables, childs
     return true
 }
 function matchObjectPattern(targetedNode, node, metaVariables, childs) {
-    for (let targetedProperty of targetedNode.properties) { // yoyo
+    childs.properties = []
+    for (let targetedProperty of targetedNode.properties) {
         let found = false
         for (let nodeProperty of node.properties) {
-            if (matchObjectLiteralElementLike(targetedProperty, nodeProperty, metaVariables, childs)) {
+            const child = {}
+            childs.properties.push(child)
+            if (matchObjectLiteralElementLike(targetedProperty, nodeProperty, metaVariables, child)) {
                 found = true
                 break;
+            }else {
+                clearMeta(child, metaVariables)
             }
         }
         if (!found) {
+            clearMeta(childs, metaVariables)
             return false
         }
     }
@@ -1718,14 +1786,22 @@ function matchTemplateLiteral(targetedNode, node, metaVariables, childs) {
         }
     }
     // quasis
-    for (let index in targetedNode.quasis) { // yoyo
-        if (!matchTemplateElement(targetedNode.quasis[index], node.quasis[index], metaVariables, childs)) {
+    childs.quasis = []
+    for (let index in targetedNode.quasis) {
+        const child = {}
+        childs.quasis.push(child)
+        if (!matchTemplateElement(targetedNode.quasis[index], node.quasis[index], metaVariables, child)) {
+            clearMeta(child, metaVariables)
             return false
         }
     }
+    childs.expressions = []
     // expressions
     for (let index in targetedNode.expressions) {
-        if (!matchExpression(targetedNode.expressions[index], node.expressions[index], metaVariables, childs)) {
+        const child = {}
+        childs.expressions.push(child)
+        if (!matchExpression(targetedNode.expressions[index], node.expressions[index], metaVariables, child)) {
+            clearMeta(child, metaVariables)
             return false
         }
     }
@@ -1875,11 +1951,11 @@ function matchExpression(targetedNode, node, metaVariables, childs) {
 }
 function matchBigIntLiteral(targetedNode, node, metaVariables, childs) {
     if (targetedNode.bigint !== node.bigint) {
-        clearMeta(childs,metaVariables)
+        clearMeta(childs, metaVariables)
         return false
     }
     if (!matchLiteral(targetedNode, node, metaVariables, childs)) {
-        clearMeta(childs,metaVariables)
+        clearMeta(childs, metaVariables)
         return false
     }
     return true

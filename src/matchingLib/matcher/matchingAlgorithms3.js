@@ -35,8 +35,10 @@ function matchVariableDeclaration(targetedNode, node, metaVariables, childs) {
 
   // Declarations Checking
   if (targetedNode.declarations.length > node.declarations.length) {
+    // yoyo
     return false;
   }
+  childs.declarations = [];
   var _iterator = _createForOfIteratorHelper(targetedNode.declarations),
     _step;
   try {
@@ -80,16 +82,19 @@ function matchVariableDeclarator(targetedNode, node, metaVariables, childs) {
   switch (_variableDeclaratorId["default"][targetedNode.id.type]) {
     case 'Identifier':
       if (!matchIdentifier(targetedNode.id, node.id, metaVariables, childs.id)) {
+        (0, _helpers.clearMeta)(childs, metaVariables);
         return false;
       }
       break;
     case 'Expression':
       if (!matchExpression(targetedNode.id, node.id, metaVariables, childs.id)) {
+        (0, _helpers.clearMeta)(childs, metaVariables);
         return false;
       }
       break;
     case 'BindingPattern':
       if (!matchBindingPattern(targetedNode.id, node.id, metaVariables, childs.id)) {
+        (0, _helpers.clearMeta)(childs, metaVariables);
         return false;
       }
       break;
@@ -139,10 +144,12 @@ function matchArrowFunctionExpression(targetedNode, node, metaVariables, childs)
     return false;
   }
   // Params
-  if (!matchParameters(targetedNode.params, node.params, metaVariables, childs)) {
+  childs.parameters = [];
+  if (!matchParameters(targetedNode.params, node.params, metaVariables, childs.parameters)) {
     return false;
   }
   // Body
+  childs.body = {};
   if (targetedNode.body.type == "General" && node.body.type !== "BlockStatement") {
     return true;
   }
@@ -150,17 +157,20 @@ function matchArrowFunctionExpression(targetedNode, node, metaVariables, childs)
     return false;
   }
   if (targetedNode.body.type === 'BlockStatement') {
-    if (!matchBlockStatement(targetedNode.body, node.body, metaVariables, childs)) {
+    if (!matchBlockStatement(targetedNode.body, node.body, metaVariables, childs.body)) {
+      (0, _helpers.clearMeta)(childs, metaVariables);
       return false;
     }
   } else {
-    if (!matchExpression(targetedNode.body, node.body, metaVariables, childs)) {
+    if (!matchExpression(targetedNode.body, node.body, metaVariables, childs.body)) {
+      (0, _helpers.clearMeta)(childs, metaVariables);
       return false;
     }
   }
   return true;
 }
 function matchParameters(targetedParams, nodeParams, metaVariables, childs) {
+  // this child is array
   if ((0, _helpers.argumentsIncludesGeneral)(targetedParams)) {
     // GENERAL CASE
     if ((0, _helpers.noOfnotGeneralArgs)(targetedParams) > nodeParams.length) {
@@ -183,7 +193,9 @@ function matchParameters(targetedParams, nodeParams, metaVariables, childs) {
           continue;
         }
         // matching
-        if (!matchParameter(nextTargetedParam, nodeParam, metaVariables, childs)) {
+        var child = {};
+        childs.push(child);
+        if (!matchParameter(nextTargetedParam, nodeParam, metaVariables, child)) {
           nodeParamIndex++;
           continue;
         }
@@ -195,7 +207,10 @@ function matchParameters(targetedParams, nodeParams, metaVariables, childs) {
         if (!targetedParam) {
           return false;
         }
-        if (!matchParameter(targetedParam, nodeParam, metaVariables, childs)) {
+        var _child = {};
+        childs.push(_child);
+        if (!matchParameter(targetedParam, nodeParam, metaVariables, _child)) {
+          (0, _helpers.clearMeta)(childs, metaVariables);
           return false;
         }
         found++;
@@ -210,7 +225,10 @@ function matchParameters(targetedParams, nodeParams, metaVariables, childs) {
       return false;
     }
     for (var index in targetedParams) {
-      if (!matchParameter(targetedParams[index], nodeParams[index], metaVariables, childs)) {
+      var _child2 = {};
+      childs.push(_child2);
+      if (!matchParameter(targetedParams[index], nodeParams[index], metaVariables, _child2)) {
+        (0, _helpers.clearMeta)(childs, metaVariables);
         return false;
       }
     }
@@ -243,9 +261,10 @@ function matchContinueStatement(targetedNode, node, metaVariables, childs) {
     if (targetedNode.label !== node.label) {
       return false;
     }
+    childs.label = {};
     switch (targetedNode.label) {
       case "Identifier":
-        if (!matchIdentifier(targetedNode.label, node.label, metaVariables, childs)) {
+        if (!matchIdentifier(targetedNode.label, node.label, metaVariables, childs.label)) {
           return false;
         }
         break;
@@ -356,20 +375,24 @@ function matchSwitchStatement(targetedNode, node, metaVariables, childs) {
     return false;
   }
   //cases
+  childs.cases = [];
   var _iterator3 = _createForOfIteratorHelper(targetedNode.cases),
     _step3;
   try {
     for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
       var targetedCase = _step3.value;
-      // yoyo
       var found = false;
       var _iterator4 = _createForOfIteratorHelper(node.cases),
         _step4;
       try {
         for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
           var nodeCase = _step4.value;
-          if (matchSwitchCase(targetedCase, nodeCase, metaVariables, childs)) {
+          var child = {};
+          childs.cases.push(child);
+          if (matchSwitchCase(targetedCase, nodeCase, metaVariables, child)) {
             found = true;
+          } else {
+            (0, _helpers.clearMeta)(child, metaVariables);
           }
         }
       } catch (err) {
@@ -434,7 +457,8 @@ function matchTryStatement(targetedNode, node, metaVariables, childs) {
 }
 function matchCatchClause(targetedNode, node, metaVariables, childs) {
   // body
-  if (!matchBlockStatement(targetedNode.body, node.body, metaVariables, childs)) {
+  childs.body = {};
+  if (!matchBlockStatement(targetedNode.body, node.body, metaVariables, childs.body)) {
     return false;
   }
 
@@ -446,15 +470,18 @@ function matchCatchClause(targetedNode, node, metaVariables, childs) {
     if (targetedNode.param.type !== node.param.type) {
       return false;
     }
+    childs.param = {};
     switch (targetedNode.param) {
       case 'Identifier':
-        if (!matchIdentifier(targetedNode.param, node.param, metaVariables, childs)) {
+        if (!matchIdentifier(targetedNode.param, node.param, metaVariables, childs.param)) {
+          (0, _helpers.clearMeta)(childs, metaVariables);
           return false;
         }
         break;
       default:
         // Binding Pattern
-        if (!matchBindingPattern(targetedNode.param, node.param, metaVariables, childs)) {
+        if (!matchBindingPattern(targetedNode.param, node.param, metaVariables, childs.param)) {
+          (0, _helpers.clearMeta)(childs, metaVariables);
           return false;
         }
         break;
@@ -490,24 +517,32 @@ function matchDoWhileStatement(targetedNode, node, metaVariables, childs) {
     return false;
   }
   //body
-  if (!matchStatement(targetedNode.body, node.body, metaVariables, childs)) {
+  childs.body = {};
+  if (!matchStatement(targetedNode.body, node.body, metaVariables, childs.body)) {
+    (0, _helpers.clearMeta)(childs, metaVariables);
     return false;
   }
   return true;
 }
 function matchForInStatement(targetedNode, node, metaVariables, childs) {
-  // left 
-  if (!matchForInitialiser(targetedNode.left, node.left, metaVariables, childs)) {
+  // left
+  childs.left = {};
+  if (!matchForInitialiser(targetedNode.left, node.left, metaVariables, childs.left)) {
+    (0, _helpers.clearMeta)(childs, metaVariables);
     return false;
   }
 
   //right
-  if (!matchExpression(targetedNode.right, node.right, metaVariables, childs)) {
+  childs.right = {};
+  if (!matchExpression(targetedNode.right, node.right, metaVariables, childs.right)) {
+    (0, _helpers.clearMeta)(childs, metaVariables);
     return false;
   }
 
   //body
-  if (!matchStatement(targetedNode.body, node.body, metaVariables, childs)) {
+  childs.body = {};
+  if (!matchStatement(targetedNode.body, node.body, metaVariables, childs.body)) {
+    (0, _helpers.clearMeta)(childs, metaVariables);
     return false;
   }
   return true;
@@ -535,18 +570,24 @@ function matchForInitialiser(targetedNode, node, metaVariables, childs) {
   return true;
 }
 function matchForOfStatement(targetedNode, node, metaVariables, childs) {
+  childs.left = {};
   // left 
-  if (!matchForInitialiser(targetedNode.left, node.left, metaVariables, childs)) {
+  if (!matchForInitialiser(targetedNode.left, node.left, metaVariables, childs.left)) {
+    (0, _helpers.clearMeta)(childs, metaVariables);
     return false;
   }
 
   //right
-  if (!matchExpression(targetedNode.right, node.right, metaVariables, childs)) {
+  childs.right = {};
+  if (!matchExpression(targetedNode.right, node.right, metaVariables, childs.right)) {
+    (0, _helpers.clearMeta)(childs, metaVariables);
     return false;
   }
 
   //body
-  if (!matchStatement(targetedNode.body, node.body, metaVariables, childs)) {
+  childs.body = {};
+  if (!matchStatement(targetedNode.body, node.body, metaVariables, childs.body)) {
+    (0, _helpers.clearMeta)(childs, metaVariables);
     return false;
   }
 
@@ -772,11 +813,15 @@ function matchIterationStatement(targetedNode, node, metaVariables, childs) {
   return true;
 }
 function matchArguments(targetedNode, node, metaVariables, childs) {
+  // childs are array
   if (targetedNode.length > node.length) {
     return false;
   }
   for (var index in targetedNode) {
-    if (!matchExpression(targetedNode[index], node[index], metaVariables, childs)) {
+    var child = {};
+    childs.push(child);
+    if (!matchExpression(targetedNode[index], node[index], metaVariables, child)) {
+      (0, _helpers.clearMeta)(child, metaVariables);
       return false;
     }
   }
@@ -789,26 +834,31 @@ function matchParameter(targetedNode, node, metaVariables, childs) {
   switch (targetedNode.type) {
     case 'Identifier':
       if (!matchIdentifier(targetedNode, node, metaVariables, childs)) {
+        (0, _helpers.clearMeta)(childs, metaVariables);
         return false;
       }
       break;
     case 'AssignmentPattern':
       if (!matchAssignmentPattern(targetedNode, node, metaVariables, childs)) {
+        (0, _helpers.clearMeta)(childs, metaVariables);
         return false;
       }
       break;
     case 'RestElement':
       if (!matchRestElement(targetedNode, node, metaVariables, childs)) {
+        (0, _helpers.clearMeta)(childs, metaVariables);
         return false;
       }
       break;
     case 'ArrayPattern':
       if (!matchObjectPattern(targetedNode, node, metaVariables, childs)) {
+        (0, _helpers.clearMeta)(childs, metaVariables);
         return false;
       }
       break;
     case 'ObjectPattern':
       if (!matchArrayPattern(targetedNode, node, metaVariables, childs)) {
+        (0, _helpers.clearMeta)(childs, metaVariables);
         return false;
       }
       break;
@@ -816,13 +866,13 @@ function matchParameter(targetedNode, node, metaVariables, childs) {
   return true;
 }
 function matchAssignmentPattern(targetedNode, node, metaVariables, childs) {
-  console.log(childs);
   if (targetedNode.right && !node.right) {
     return false;
   }
+  childs.right = {};
   if (targetedNode.right) {
-    if (!matchExpression(targetedNode, node, metaVariables, childs)) {
-      console.log(childs);
+    if (!matchExpression(targetedNode.right, node.right, metaVariables, childs.right)) {
+      (0, _helpers.clearMeta)(childs, metaVariables);
       return false;
     }
   }
@@ -832,21 +882,23 @@ function matchAssignmentPattern(targetedNode, node, metaVariables, childs) {
   if (targetedNode.left.type !== node.left.type) {
     return false;
   }
+  childs.left = {};
   switch (targetedNode.left.type) {
     case 'Identifier':
-      if (!matchIdentifier(targetedNode, node, metaVariables, childs)) {
-        console.log(childs);
+      if (!matchIdentifier(targetedNode.left, node.left, metaVariables, childs.left)) {
+        (0, _helpers.clearMeta)(childs, metaVariables);
         return false;
       }
       break;
     case 'ArrayPattern':
-      if (!matchArrayPattern(targetedNode, node, metaVariables, childs)) {
-        console.log(childs);
+      if (!matchArrayPattern(targetedNode.left, node.left, metaVariables, childs.left)) {
+        (0, _helpers.clearMeta)(childs, metaVariables);
         return false;
       }
       break;
     case 'ObjectPattern':
-      if (!matchObjectPattern(targetedNode, node, metaVariables, childs)) {
+      if (!matchObjectPattern(targetedNode.left, node.left, metaVariables, childs.left)) {
+        (0, _helpers.clearMeta)(childs, metaVariables);
         return false;
       }
       break;
@@ -854,8 +906,8 @@ function matchAssignmentPattern(targetedNode, node, metaVariables, childs) {
   return true;
 }
 function matchAssignmentExpression(targetedNode, node, metaVariables, childs) {
-  // operator
   if (targetedNode.operator !== node.operator) {
+    (0, _helpers.clearMeta)(childs, metaVariables);
     return false;
   }
   childs.left = {};
@@ -931,8 +983,8 @@ function matchNewExpression(targtedNode, node, metaVariables, childs) {
     return false;
   }
   // arguments
-  if (!matchArguments(targtedNode.arguments, node.arguments, metaVariables, childs)) {
-    // yoyo
+  childs.arguments = [];
+  if (!matchArguments(targtedNode.arguments, node.arguments, metaVariables, childs.arguments)) {
     (0, _helpers.clearMeta)(childs, metaVariables);
     return false;
   }
@@ -1015,7 +1067,10 @@ function matchSequenceExpression(targetedNode, node, metaVariables, childs) {
 }
 function matchAwaitExpression(targetedNode, node, metaVariables, childs) {
   // moseeba our meriyah doesnt read await as reserved word
-  if (!matchExpression(targetedNode.argument, node.argument, metaVariables, childs)) {
+  //argument
+  childs.argument = {};
+  if (!matchExpression(targetedNode.argument, node.argument, metaVariables, childs.argument)) {
+    (0, _helpers.clearMeta)(childs, metaVariables);
     return false;
   }
   return true;
@@ -1097,12 +1152,15 @@ function matchCallExpression(targetedNode, node, metaVariables, childs) {
       return false;
     }
   } else {
-    if (!matchExpression(targetedNode.callee, node.callee, metaVariables, childs)) {
+    childs.callee = {};
+    if (!matchExpression(targetedNode.callee, node.callee, metaVariables, childs.callee)) {
+      (0, _helpers.clearMeta)(childs, metaVariables);
       return false;
     }
   }
 
   // arguments
+  childs.arguments = [];
   if ((0, _helpers.argumentsIncludesGeneral)(targetedNode.arguments)) {
     // General Found
     if ((0, _helpers.noOfnotGeneralArgs)(targetedNode.arguments) > node.arguments.length) {
@@ -1129,13 +1187,19 @@ function matchCallExpression(targetedNode, node, metaVariables, childs) {
           continue;
         }
         if (nextTargetedArgument.type == 'SpreadElement') {
-          if (!matchSpreadElement(nextTargetedArgument, nodeArgument, metaVariables, childs)) {
+          var child = {};
+          childs.arguments.push(child);
+          if (!matchSpreadElement(nextTargetedArgument, nodeArgument, metaVariables, child)) {
             nodeArgumentIndex++;
+            (0, _helpers.clearMeta)(child, metaVariables);
             continue;
           }
         } else {
-          if (!matchExpression(nextTargetedArgument, nodeArgument, metaVariables, childs)) {
+          var _child3 = {};
+          childs.arguments.push(_child3);
+          if (!matchExpression(nextTargetedArgument, nodeArgument, metaVariables, _child3)) {
             nodeArgumentIndex++;
+            (0, _helpers.clearMeta)(_child3, metaVariables);
             continue;
           }
         }
@@ -1151,11 +1215,17 @@ function matchCallExpression(targetedNode, node, metaVariables, childs) {
           return false;
         }
         if (targetedArgument.type == 'SpreadElement') {
-          if (!matchSpreadElement(targetedArgument, nodeArgument, metaVariables, childs)) {
+          var _child4 = {};
+          childs.arguments.push(_child4);
+          if (!matchSpreadElement(targetedArgument, nodeArgument, metaVariables, _child4)) {
+            (0, _helpers.clearMeta)(_child4, metaVariables);
             return false;
           }
         } else {
-          if (!matchExpression(targetedArgument, nodeArgument, metaVariables, childs)) {
+          var _child5 = {};
+          childs.arguments.push(_child5);
+          if (!matchExpression(targetedArgument, nodeArgument, metaVariables, _child5)) {
+            (0, _helpers.clearMeta)(_child5, metaVariables);
             return false;
           }
         }
@@ -1175,11 +1245,17 @@ function matchCallExpression(targetedNode, node, metaVariables, childs) {
         return false;
       }
       if (targetedNode.arguments[index].type == 'SpreadElement') {
-        if (!matchSpreadElement(targetedNode.arguments[index], node.arguments[index], metaVariables, childs)) {
+        var _child6 = {};
+        childs.arguments.push(_child6);
+        if (!matchSpreadElement(targetedNode.arguments[index], node.arguments[index], metaVariables, _child6)) {
+          (0, _helpers.clearMeta)(_child6, metaVariables);
           return false;
         }
       } else {
-        if (!matchExpression(targetedNode.arguments[index], node.arguments[index], metaVariables, childs)) {
+        var _child7 = {};
+        childs.arguments.push(_child7);
+        if (!matchExpression(targetedNode.arguments[index], node.arguments[index], metaVariables, _child7)) {
+          (0, _helpers.clearMeta)(_child7);
           return false;
         }
       }
@@ -1252,11 +1328,15 @@ function matchFunctionDeclarationBase(targetedNode, node, metaVariables, childs)
     return false;
   }
   // params
-  if (!matchParameters(targetedNode.params, node.params, metaVariables, childs)) {
+  childs.parameters = [];
+  if (!matchParameters(targetedNode.params, node.params, metaVariables, childs.parameters)) {
     return false;
   }
+  //body
+  childs.body = {};
   if (targetedNode.body) {
-    if (!matchBlockStatement(targetedNode.body, node.body, metaVariables, childs)) {
+    if (!matchBlockStatement(targetedNode.body, node.body, metaVariables, childs.body)) {
+      (0, _helpers.clearMeta)(childs, metaVariables);
       return false;
     }
   }
@@ -1421,28 +1501,36 @@ function matchPrimaryExpression(targetedNode, node, metaVariables, childs) {
   return true;
 }
 function matchArrayExpression(targetedNode, node, metaVariables, childs) {
+  childs.elements = [];
   for (var index in targetedNode.elements) {
     if (targetedNode.elements[index] !== null && node.elements[index] !== null) {
       if (!node.elements[index]) {
         return false;
       }
-      if (targetedNode.elements[index].type === node.elements[index].type) switch (targetedNode.elements[index].type) {
-        case 'SpreadElement':
-          if (!matchSpreadElement(targetedNode.elements[index], node.elements[index], metaVariables, childs)) {
-            return false;
-          }
-          break;
-        default:
-          if (!matchExpression(targetedNode.elements[index], node.elements[index], metaVariables, childs)) {
-            return false;
-          }
-          break;
+      if (targetedNode.elements[index].type === node.elements[index].type) {
+        var child = {};
+        childs.elements.push(child);
+        switch (targetedNode.elements[index].type) {
+          case 'SpreadElement':
+            if (!matchSpreadElement(targetedNode.elements[index], node.elements[index], metaVariables, child)) {
+              (0, _helpers.clearMeta)(child, metaVariables);
+              return false;
+            }
+            break;
+          default:
+            if (!matchExpression(targetedNode.elements[index], node.elements[index], metaVariables, child)) {
+              (0, _helpers.clearMeta)(child, metaVariables);
+              return false;
+            }
+            break;
+        }
       }
     }
   }
   return true;
 }
 function matchArrayPattern(targetedNode, node, metaVariables, childs) {
+  //yoyy
   for (var index in targetedNode.elements) {
     if (node.elements[index] == null) {
       return false;
@@ -1479,21 +1567,25 @@ function matchMetaProperty(targetedNode, node, metaVariables, childs) {
   return true;
 }
 function matchObjectExpression(targetedNode, node, metaVariables, childs) {
+  childs.properties = [];
   var _iterator5 = _createForOfIteratorHelper(targetedNode.properties),
     _step5;
   try {
     for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
       var targetedProperty = _step5.value;
-      // yoyo
       var found = false;
       var _iterator6 = _createForOfIteratorHelper(node.properties),
         _step6;
       try {
         for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
           var nodeProperty = _step6.value;
-          if (matchObjectLiteralElementLike(targetedProperty, nodeProperty, metaVariables, childs)) {
+          var child = {};
+          childs.properties.push(child);
+          if (matchObjectLiteralElementLike(targetedProperty, nodeProperty, metaVariables, child)) {
             found = true;
             break;
+          } else {
+            (0, _helpers.clearMeta)(child, metaVariables);
           }
         }
       } catch (err) {
@@ -1502,6 +1594,7 @@ function matchObjectExpression(targetedNode, node, metaVariables, childs) {
         _iterator6.f();
       }
       if (!found) {
+        (0, _helpers.clearMeta)(childs, metaVariables);
         return false;
       }
     }
@@ -1649,21 +1742,25 @@ function matchObjectLiteralElementLike(targetedNode, node, metaVariables, childs
   return true;
 }
 function matchObjectPattern(targetedNode, node, metaVariables, childs) {
+  childs.properties = [];
   var _iterator7 = _createForOfIteratorHelper(targetedNode.properties),
     _step7;
   try {
     for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
       var targetedProperty = _step7.value;
-      // yoyo
       var found = false;
       var _iterator8 = _createForOfIteratorHelper(node.properties),
         _step8;
       try {
         for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
           var nodeProperty = _step8.value;
-          if (matchObjectLiteralElementLike(targetedProperty, nodeProperty, metaVariables, childs)) {
+          var child = {};
+          childs.properties.push(child);
+          if (matchObjectLiteralElementLike(targetedProperty, nodeProperty, metaVariables, child)) {
             found = true;
             break;
+          } else {
+            (0, _helpers.clearMeta)(child, metaVariables);
           }
         }
       } catch (err) {
@@ -1672,6 +1769,7 @@ function matchObjectPattern(targetedNode, node, metaVariables, childs) {
         _iterator8.f();
       }
       if (!found) {
+        (0, _helpers.clearMeta)(childs, metaVariables);
         return false;
       }
     }
@@ -1704,15 +1802,22 @@ function matchTemplateLiteral(targetedNode, node, metaVariables, childs) {
     }
   }
   // quasis
+  childs.quasis = [];
   for (var index in targetedNode.quasis) {
-    // yoyo
-    if (!matchTemplateElement(targetedNode.quasis[index], node.quasis[index], metaVariables, childs)) {
+    var child = {};
+    childs.quasis.push(child);
+    if (!matchTemplateElement(targetedNode.quasis[index], node.quasis[index], metaVariables, child)) {
+      (0, _helpers.clearMeta)(child, metaVariables);
       return false;
     }
   }
+  childs.expressions = [];
   // expressions
   for (var _index in targetedNode.expressions) {
-    if (!matchExpression(targetedNode.expressions[_index], node.expressions[_index], metaVariables, childs)) {
+    var _child8 = {};
+    childs.expressions.push(_child8);
+    if (!matchExpression(targetedNode.expressions[_index], node.expressions[_index], metaVariables, _child8)) {
+      (0, _helpers.clearMeta)(_child8, metaVariables);
       return false;
     }
   }
@@ -1854,9 +1959,11 @@ function matchExpression(targetedNode, node, metaVariables, childs) {
 }
 function matchBigIntLiteral(targetedNode, node, metaVariables, childs) {
   if (targetedNode.bigint !== node.bigint) {
+    (0, _helpers.clearMeta)(childs, metaVariables);
     return false;
   }
   if (!matchLiteral(targetedNode, node, metaVariables, childs)) {
+    (0, _helpers.clearMeta)(childs, metaVariables);
     return false;
   }
   return true;
