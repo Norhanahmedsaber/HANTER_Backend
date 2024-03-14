@@ -1,6 +1,6 @@
 import AbstractSyntaxTree from 'abstract-syntax-tree'
 import evaluate from "./evaluate.js"
-import matchTypes from './matchingAlgorithms2.js'
+import matchTypes from './matchingAlgorithms3.js'
 import { createBlockStatement } from './helpers.js'
 export default function match(file, rules, reports) {
     for(let rule of rules) {
@@ -9,14 +9,15 @@ export default function match(file, rules, reports) {
 }
 
 function matchRule({name:fileName, ast}, rule, reports) {
-    const logicBlock = createLogicContainer(rule, ast)
+    const metaVariables = []
+    const logicBlock = createLogicContainer(rule, ast, metaVariables)
     const match = evaluate(logicBlock)
     if (match){
         reports.reports.push( {filepath:fileName, line:match.line, col:match.column, rule_name:rule.id, message: rule.message} )
     }
 }
 
-function matchPattern(fileAST, pattern) {
+function matchPattern(fileAST, pattern, metaVariables) {
     let targetedNode
     let AST
     if(pattern.pattern) {
@@ -43,7 +44,8 @@ function matchPattern(fileAST, pattern) {
                 targetedNode = targetedNode.expression
             }
             if(node.type === targetedNode.type) {
-                if(matchTypes[targetedNode.type](targetedNode, node)) {
+                const childs = {}
+                if(matchTypes[targetedNode.type](targetedNode, node, metaVariables, childs)) {
                     match = node.loc.start
                 }
             }
@@ -60,30 +62,30 @@ function report(fileName, info, reports) {
     }
 }
 
-function createLogicContainer(rule, ast) {
-    return processPattern(rule, ast);
+function createLogicContainer(rule, ast, metaVariables) {
+    return processPattern(rule, ast, metaVariables);
 }
 
-function processPattern(rule, ast) {
+function processPattern(rule, ast, metaVariables) {
     if(rule.patterns) {
         return {
             type: "AND",
-            value: rule.patterns.map(p => processPattern(p, ast))
+            value: rule.patterns.map(p => processPattern(p, ast, metaVariables))
         }
     }else if(rule['pattern-either']) {
         return {
             type: "OR",
-            value: rule['pattern-either'].map(p => processPattern(p, ast))
+            value: rule['pattern-either'].map(p => processPattern(p, ast, metaVariables))
         }
     }else {
-        return convertSinglePattern(rule, ast)
+        return convertSinglePattern(rule, ast, metaVariables)
     }
 }
-function convertSinglePattern(pattern, ast) {
+function convertSinglePattern(pattern, ast, metaVariables) {
     if (pattern.pattern) {
-        return { type: 'pattern', value: matchPattern(ast, pattern) }; // Placeholder for actual pattern match
+        return { type: 'pattern', value: matchPattern(ast, pattern, metaVariables) }; // Placeholder for actual pattern match
     } else if (pattern['pattern-not']) {
-        return { type: 'pattern', value: !matchPattern(ast, pattern) }; // Placeholder for pattern not match
+        return { type: 'pattern', value: !matchPattern(ast, pattern, metaVariables) }; // Placeholder for pattern not match
     }
     // Add more conditions here for other pattern types like pattern-inside, pattern-regex, etc.
 }

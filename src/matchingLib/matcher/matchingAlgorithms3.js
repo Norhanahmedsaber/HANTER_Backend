@@ -822,11 +822,9 @@ function matchAssignmentPattern(targetedNode, node, metaVariables, childs) {
       }
       break;
   }
-  console.log(childs);
   return true;
 }
 function matchAssignmentExpression(targetedNode, node, metaVariables, childs) {
-  console.log(childs);
   // operator
   if (targetedNode.operator !== node.operator) {
     return false;

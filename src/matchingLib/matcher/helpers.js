@@ -4,9 +4,11 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.argumentsIncludesGeneral = argumentsIncludesGeneral;
+exports.clearMeta = clearMeta;
 exports.createBlockStatement = createBlockStatement;
 exports.noOfnotGeneralArgs = noOfnotGeneralArgs;
 exports.statementsIncludesGeneral = statementsIncludesGeneral;
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
 function argumentsIncludesGeneral(args) {
   var found = false;
   args.forEach(function (arg) {
@@ -39,4 +41,15 @@ function statementsIncludesGeneral(statements) {
     }
   });
   return found;
+}
+function clearMeta(childs, metaVariables) {
+  for (var _i = 0, _Object$keys = Object.keys(childs); _i < _Object$keys.length; _i++) {
+    var key = _Object$keys[_i];
+    if (_typeof(childs[key]) == 'object') {
+      clearMeta(childs[key], metaVariables);
+    } else if (typeof childs[key] == 'string') {
+      delete metaVariables[key];
+    }
+    delete childs[key];
+  }
 }
