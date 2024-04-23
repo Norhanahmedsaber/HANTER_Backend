@@ -8,120 +8,28 @@ var _abstractSyntaxTree = _interopRequireDefault(require("abstract-syntax-tree")
 var _evaluate = _interopRequireDefault(require("./evaluate.js"));
 var _matchingAlgorithms = _interopRequireDefault(require("./matchingAlgorithms3.js"));
 var _helpers = require("./helpers.js");
+var _normal = _interopRequireDefault(require("./normal/normal.js"));
+var _taint = _interopRequireDefault(require("./taint/taint.js"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i]; return arr2; }
 function match(file, rules, reports) {
+  // console.log(file.ast.body[0].declarations[0])
   var _iterator = _createForOfIteratorHelper(rules),
     _step;
   try {
     for (_iterator.s(); !(_step = _iterator.n()).done;) {
       var rule = _step.value;
-      matchRule(file, rule, reports);
+      if (rule.type === "normal") {
+        (0, _normal["default"])(file, rule, reports);
+      } else {
+        (0, _taint["default"])(file, rule, reports);
+      }
     }
   } catch (err) {
     _iterator.e(err);
   } finally {
     _iterator.f();
   }
-}
-function matchRule(_ref, rule, reports) {
-  var fileName = _ref.name,
-    ast = _ref.ast;
-  var metaVariables = [];
-  var logicBlock = createLogicContainer(rule, ast, metaVariables);
-  var match = (0, _evaluate["default"])(logicBlock);
-  if (match) {
-    reports.reports.push({
-      filepath: fileName,
-      line: match.line,
-      col: match.column,
-      rule_name: rule.id,
-      message: rule.message
-    });
-  }
-}
-function matchPattern(fileAST, pattern, metaVariables) {
-  var targetedNode;
-  var AST;
-  if (pattern.pattern) {
-    if (pattern.pattern.body.length == 1) {
-      // Type 1 (Single Line)
-      targetedNode = pattern.pattern.body[0];
-      AST = fileAST;
-    } else {
-      // Type 2 (Multi Line)
-      AST = (0, _helpers.createBlockStatement)(fileAST);
-      targetedNode = (0, _helpers.createBlockStatement)(pattern.pattern);
-    }
-  } else {
-    if (pattern['pattern-not'].body.length == 1) {
-      // Type 1 (Single Line)
-      AST = fileAST;
-      targetedNode = pattern['pattern-not'].body[0];
-    } else {
-      // Type 2 (Multi Line)
-      AST = (0, _helpers.createBlockStatement)(fileAST);
-      targetedNode = (0, _helpers.createBlockStatement)(pattern['pattern-not']);
-    }
-  }
-  var match = false;
-  _abstractSyntaxTree["default"].walk(AST, function (node) {
-    if (!match) {
-      if (targetedNode.type === 'ExpressionStatement') {
-        targetedNode = targetedNode.expression;
-      }
-      if (node.type === targetedNode.type) {
-        var childs = {};
-        if (_matchingAlgorithms["default"][targetedNode.type](targetedNode, node, metaVariables, childs)) {
-          match = node.loc.start;
-        }
-      }
-    }
-  });
-  return match;
-}
-function report(fileName, info, reports) {
-  if (reports.reports[fileName]) {
-    reports.reports[fileName].push(info);
-  } else {
-    reports.reports[fileName] = [info];
-  }
-}
-function createLogicContainer(rule, ast, metaVariables) {
-  return processPattern(rule, ast, metaVariables);
-}
-function processPattern(rule, ast, metaVariables) {
-  if (rule.patterns) {
-    return {
-      type: "AND",
-      value: rule.patterns.map(function (p) {
-        return processPattern(p, ast, metaVariables);
-      })
-    };
-  } else if (rule['pattern-either']) {
-    return {
-      type: "OR",
-      value: rule['pattern-either'].map(function (p) {
-        return processPattern(p, ast, metaVariables);
-      })
-    };
-  } else {
-    return convertSinglePattern(rule, ast, metaVariables);
-  }
-}
-function convertSinglePattern(pattern, ast, metaVariables) {
-  if (pattern.pattern) {
-    return {
-      type: 'pattern',
-      value: matchPattern(ast, pattern, metaVariables)
-    }; // Placeholder for actual pattern match
-  } else if (pattern['pattern-not']) {
-    return {
-      type: 'pattern',
-      value: !matchPattern(ast, pattern, metaVariables)
-    }; // Placeholder for pattern not match
-  }
-  // Add more conditions here for other pattern types like pattern-inside, pattern-regex, etc.
 }

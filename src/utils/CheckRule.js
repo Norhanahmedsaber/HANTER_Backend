@@ -48,6 +48,10 @@ function checkpattern1(filteredRule) {
     }
     return false
 }
+function checkpattern2(filteredRule) {
+    // TODO
+    return true
+}
 
 function checkRuleSyntax(content) {
     try {
@@ -61,13 +65,22 @@ function checkRuleSyntax(content) {
         if (!ruleJson.severity) {
             ruleJson.severity = "Error"
         }
-        const filteredRule = getPattern(ruleJson)
-        if (Object.keys(filteredRule).length !== 1) {
-            return false
+        if (ruleJson.type == "normal") {
+            const filteredRule = getPattern(ruleJson)
+            if (Object.keys(filteredRule).length !== 1) {
+                return false
+            }
+            if (!checkpattern1(filteredRule)) {
+                return false
+            }
+        } else if (ruleJson.type == "taint") {
+            const filteredRule = getPattern(ruleJson)
+            if (!checkpattern2(filteredRule)) {
+                return false
+            }
         }
-        if (!checkpattern1(filteredRule)) {
-            return false
-        }
+
+
         return true
     } catch (err) {
         return false
