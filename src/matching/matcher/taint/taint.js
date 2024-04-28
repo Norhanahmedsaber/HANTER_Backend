@@ -1,18 +1,18 @@
 import AbstractSyntaxTree, { Identifier } from 'abstract-syntax-tree'
 import evaluate from "../evaluate.js"
-import matchTypes from '../matchingAlgorithms2.js'
+import matchTypes from '../matchingAlgorithms4.js'
 import { createBlockStatement } from '../helpers.js'
-import getScope from './getScope.js'
+import getScope, { checkIfInside } from './getScope.js'
 import getDeclarationScope from './getDeclarationScope.js'
 function matchTaintRule({ name: fileName, ast }, rule, reports) {
     let taints = getSources(ast, rule["pattern-sources"])
     let sinks = getSinks(rule["pattern-sinks"])
-    console.log(sinks);
+    // console.log(sinks);
     // console.log(taints)
     propagate(ast, taints)
-    console.log(taints)
+    // console.log(taints)s
     matchTaint(ast, sinks, taints, reports)
-    console.log(reports);
+    // console.log(reports);
     // const match = evaluate(logicBlock)
     // if (match){
     //     reports.reports.push( {filepath:fileName, line:match.line, col:match.column, rule_name:rule.id, message: rule.message} )
@@ -28,13 +28,22 @@ function matchTaint(ast, sinks, taints, reports) {
                             for (let arg of node.arguments) {
                                 if (arg.type === taint.type) {
                                     if (arg.type === "Identifier" && arg.name === taintName) {
-                                        console.log(arg.loc);
+                                        if (!taint.scope || checkIfInside(arg.loc.start.line, arg.loc.start.col, taint.scope.scope.loc.start.line, taint.scope.scope.loc.end.line, taint.scope.scope.loc.start.col, taint.scope.scope.loc.end.col)) {
+                                            console.log(arg.loc)
+                                        }
+
                                     } else if (arg.type === "CallExpression" && arg.callee.type === "Identifier" && arg.callee.name === taintName) {
-                                        console.log(arg.loc);
+                                        if (!taint.scope || checkIfInside(arg.loc.start.line, arg.loc.start.col, taint.scope.scope.loc.start.line, taint.scope.scope.loc.end.line, taint.scope.scope.loc.start.col, taint.scope.scope.loc.end.col)) {
+                                            console.log(arg.loc)
+                                        }
                                     } else if (arg.type === "CallExpression" && arg.callee.type === "MemberExpression" && getMemberExpressionName(arg.callee) === taintName) {
-                                        console.log(arg.loc);
+                                        if (!taint.scope || checkIfInside(arg.loc.start.line, arg.loc.start.col, taint.scope.scope.loc.start.line, taint.scope.scope.loc.end.line, taint.scope.scope.loc.start.col, taint.scope.scope.loc.end.col)) {
+                                            console.log(arg.loc)
+                                        }
                                     } else if (arg.type === "MemberExpression" && getMemberExpressionName(arg) === taintName) {
-                                        console.log(arg.loc);
+                                        if (!taint.scope || checkIfInside(arg.loc.start.line, arg.loc.start.col, taint.scope.scope.loc.start.line, taint.scope.scope.loc.end.line, taint.scope.scope.loc.start.col, taint.scope.scope.loc.end.col)) {
+                                            console.log(arg.loc)
+                                        }
                                     }
                                 } else if (arg.type === "ArrayExpression") {
 
@@ -277,9 +286,38 @@ function matchSinkPatttern(patternAST, sinks) {
 
 }
 function matchPatternInside(fileAST, source) {
-    console.log(source)
+    const metaVariables = []
+    source.wrappers.forEach((wrapper) => {
+        matchWrapper(fileAST, wrapper.pattern, metaVariables)
+    })
 }
+function matchWrapper(fileAST, pattern, metaVariables) {
+    let targetedNode
+    let AST
+    if (pattern.body.length == 1) { // Type 1 (Single Line)
+        targetedNode = pattern.body[0]
+        AST = fileAST
+    } else { // Type 2 (Multi Line)
+        AST = createBlockStatement(fileAST)
+        targetedNode = createBlockStatement(pattern)
+    }
+    let match = false
+    AbstractSyntaxTree.walk(AST, (node) => {
+        if (!match) {
+            if (targetedNode.type === 'ExpressionStatement') {
+                targetedNode = targetedNode.expression
+            }
+            if (node.type === targetedNode.type) {
+                const childs = {}
+                if (matchTypes[targetedNode.type](targetedNode, node, metaVariables, childs)) {
+                    match = node.loc.start
+                }
+            }
+        }
+    })
 
+    console.log(match)
+}
 function validPatternSink(patternAST) {
     if (patternAST.body.length > 1) {
         return false

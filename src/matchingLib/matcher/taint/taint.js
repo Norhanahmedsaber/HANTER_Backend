@@ -7,9 +7,9 @@ Object.defineProperty(exports, "__esModule", {
 exports["default"] = void 0;
 var _abstractSyntaxTree = _interopRequireWildcard(require("abstract-syntax-tree"));
 var _evaluate = _interopRequireDefault(require("../evaluate.js"));
-var _matchingAlgorithms = _interopRequireDefault(require("../matchingAlgorithms2.js"));
+var _matchingAlgorithms = _interopRequireDefault(require("../matchingAlgorithms4.js"));
 var _helpers = require("../helpers.js");
-var _getScope = _interopRequireDefault(require("./getScope.js"));
+var _getScope = _interopRequireWildcard(require("./getScope.js"));
 var _getDeclarationScope = _interopRequireDefault(require("./getDeclarationScope.js"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 function _getRequireWildcardCache(e) { if ("function" != typeof WeakMap) return null; var r = new WeakMap(), t = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(e) { return e ? t : r; })(e); }
@@ -27,12 +27,12 @@ function matchTaintRule(_ref, rule, reports) {
     ast = _ref.ast;
   var taints = getSources(ast, rule["pattern-sources"]);
   var sinks = getSinks(rule["pattern-sinks"]);
-  console.log(sinks);
+  // console.log(sinks);
   // console.log(taints)
   propagate(ast, taints);
-  console.log(taints);
+  // console.log(taints)s
   matchTaint(ast, sinks, taints, reports);
-  console.log(reports);
+  // console.log(reports);
   // const match = evaluate(logicBlock)
   // if (match){
   //     reports.reports.push( {filepath:fileName, line:match.line, col:match.column, rule_name:rule.id, message: rule.message} )
@@ -61,13 +61,21 @@ function matchTaint(ast, sinks, taints, reports) {
                       var arg = _step3.value;
                       if (arg.type === taint.type) {
                         if (arg.type === "Identifier" && arg.name === taintName) {
-                          console.log(arg.loc);
+                          if (!taint.scope || (0, _getScope.checkIfInside)(arg.loc.start.line, arg.loc.start.col, taint.scope.scope.loc.start.line, taint.scope.scope.loc.end.line, taint.scope.scope.loc.start.col, taint.scope.scope.loc.end.col)) {
+                            console.log(arg.loc);
+                          }
                         } else if (arg.type === "CallExpression" && arg.callee.type === "Identifier" && arg.callee.name === taintName) {
-                          console.log(arg.loc);
+                          if (!taint.scope || (0, _getScope.checkIfInside)(arg.loc.start.line, arg.loc.start.col, taint.scope.scope.loc.start.line, taint.scope.scope.loc.end.line, taint.scope.scope.loc.start.col, taint.scope.scope.loc.end.col)) {
+                            console.log(arg.loc);
+                          }
                         } else if (arg.type === "CallExpression" && arg.callee.type === "MemberExpression" && getMemberExpressionName(arg.callee) === taintName) {
-                          console.log(arg.loc);
+                          if (!taint.scope || (0, _getScope.checkIfInside)(arg.loc.start.line, arg.loc.start.col, taint.scope.scope.loc.start.line, taint.scope.scope.loc.end.line, taint.scope.scope.loc.start.col, taint.scope.scope.loc.end.col)) {
+                            console.log(arg.loc);
+                          }
                         } else if (arg.type === "MemberExpression" && getMemberExpressionName(arg) === taintName) {
-                          console.log(arg.loc);
+                          if (!taint.scope || (0, _getScope.checkIfInside)(arg.loc.start.line, arg.loc.start.col, taint.scope.scope.loc.start.line, taint.scope.scope.loc.end.line, taint.scope.scope.loc.start.col, taint.scope.scope.loc.end.col)) {
+                            console.log(arg.loc);
+                          }
                         }
                       } else if (arg.type === "ArrayExpression") {} else if (arg.type === "ObjectExpression") {}
                     }
@@ -327,7 +335,38 @@ function matchSinkPatttern(patternAST, sinks) {
   return sinks;
 }
 function matchPatternInside(fileAST, source) {
-  console.log(source);
+  var metaVariables = [];
+  source.wrappers.forEach(function (wrapper) {
+    matchWrapper(fileAST, wrapper.pattern, metaVariables);
+  });
+}
+function matchWrapper(fileAST, pattern, metaVariables) {
+  var targetedNode;
+  var AST;
+  if (pattern.body.length == 1) {
+    // Type 1 (Single Line)
+    targetedNode = pattern.body[0];
+    AST = fileAST;
+  } else {
+    // Type 2 (Multi Line)
+    AST = (0, _helpers.createBlockStatement)(fileAST);
+    targetedNode = (0, _helpers.createBlockStatement)(pattern);
+  }
+  var match = false;
+  _abstractSyntaxTree["default"].walk(AST, function (node) {
+    if (!match) {
+      if (targetedNode.type === 'ExpressionStatement') {
+        targetedNode = targetedNode.expression;
+      }
+      if (node.type === targetedNode.type) {
+        var childs = {};
+        if (_matchingAlgorithms["default"][targetedNode.type](targetedNode, node, metaVariables, childs)) {
+          match = node.loc.start;
+        }
+      }
+    }
+  });
+  console.log(match);
 }
 function validPatternSink(patternAST) {
   if (patternAST.body.length > 1) {
