@@ -46,6 +46,7 @@ function statementsIncludesGeneral(statements) {
   return found;
 }
 function clearMeta(childs, metaVariables) {
+  console.log(childs, metaVariables);
   for (var _i = 0, _Object$keys = Object.keys(childs); _i < _Object$keys.length; _i++) {
     var key = _Object$keys[_i];
     if (Array.isArray(childs[key])) {
