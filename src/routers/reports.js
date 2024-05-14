@@ -49,7 +49,11 @@ router.post('/playground', async (req, res) => {
     const result = await playGroundService.run(source, rule)
     if(result.message) {
         return res.status(result.statusCode).send({
-            message: result.message
+            message: result.message,
+            loc: {
+                line: result.line,
+                col: result.col
+            }
         })
     }else {
         return res.send(result)
