@@ -7,18 +7,18 @@ import getDeclarationScope from './getDeclarationScope.js'
 function matchTaintRule({ name: fileName, ast }, rule, reports) {
     let taints = getSources(ast, rule["pattern-sources"])
     let sinks = getSinks(rule["pattern-sinks"])
-    // console.log(sinks);
     // console.log(taints)
     propagate(ast, taints)
-    // console.log(taints)s
-    matchTaint(ast, sinks, taints, reports)
+    // console.log(taints)
+    // console.log(sinks)
+    matchTaint(ast, sinks, taints, reports, rule)
     // console.log(reports);
     // const match = evaluate(logicBlock)
     // if (match){
     //     reports.reports.push( {filepath:fileName, line:match.line, col:match.column, rule_name:rule.id, message: rule.message} )
     // }
 }
-function matchTaint(ast, sinks, taints, reports) {
+function matchTaint(ast, sinks, taints, reports, rule) {
     for (let sink of sinks) {
         AbstractSyntaxTree.walk(ast, (node) => {
             if (node.type == "CallExpression") {
@@ -29,20 +29,25 @@ function matchTaint(ast, sinks, taints, reports) {
                                 if (arg.type === taint.type) {
                                     if (arg.type === "Identifier" && arg.name === taintName) {
                                         if (!taint.scope || checkIfInside(arg.loc.start.line, arg.loc.start.col, taint.scope.scope.loc.start.line, taint.scope.scope.loc.end.line, taint.scope.scope.loc.start.col, taint.scope.scope.loc.end.col)) {
-                                            console.log(arg.loc)
+                                            reports.reports.push({ filepath: "playground", line: arg.loc.start.line, col: arg.loc.start.column, rule_name: rule.id, message: rule.message })
+                                            break;
                                         }
 
                                     } else if (arg.type === "CallExpression" && arg.callee.type === "Identifier" && arg.callee.name === taintName) {
                                         if (!taint.scope || checkIfInside(arg.loc.start.line, arg.loc.start.col, taint.scope.scope.loc.start.line, taint.scope.scope.loc.end.line, taint.scope.scope.loc.start.col, taint.scope.scope.loc.end.col)) {
-                                            console.log(arg.loc)
+                                            reports.reports.push({ filepath: "playground", line: arg.loc.start.line, col: arg.loc.start.column, rule_name: rule.id, message: rule.message })
+                                            break;
                                         }
                                     } else if (arg.type === "CallExpression" && arg.callee.type === "MemberExpression" && getMemberExpressionName(arg.callee) === taintName) {
                                         if (!taint.scope || checkIfInside(arg.loc.start.line, arg.loc.start.col, taint.scope.scope.loc.start.line, taint.scope.scope.loc.end.line, taint.scope.scope.loc.start.col, taint.scope.scope.loc.end.col)) {
-                                            console.log(arg.loc)
+                                            reports.reports.push({ filepath: "playground", line: arg.loc.start.line, col: arg.loc.start.column, rule_name: rule.id, message: rule.message })
+                                            break;
                                         }
                                     } else if (arg.type === "MemberExpression" && getMemberExpressionName(arg) === taintName) {
                                         if (!taint.scope || checkIfInside(arg.loc.start.line, arg.loc.start.col, taint.scope.scope.loc.start.line, taint.scope.scope.loc.end.line, taint.scope.scope.loc.start.col, taint.scope.scope.loc.end.col)) {
+                                            reports.reports.push({ filepath: "playground", line: arg.loc.start.line, col: arg.loc.start.column, rule_name: rule.id, message: rule.message })
                                             console.log(arg.loc)
+                                            break;
                                         }
                                     }
                                 } else if (arg.type === "ArrayExpression") {
@@ -87,7 +92,6 @@ function track(ast, taint, taints) {
         switch (t.type) {
             case "CallExpression":
                 AbstractSyntaxTree.walk(t.scope?.scope ? t.scope.scope : ast, (node) => {
-
                     if (node.type === "VariableDeclarator" && node.init
                         && node.init.type === "CallExpression") {
                         if (node.init.callee.type === "Identifier" && node.init.callee.name === t.name) {
@@ -285,15 +289,75 @@ function matchSinkPatttern(patternAST, sinks) {
     return sinks
 
 }
-function matchPatternInside(fileAST, source) {
-    const metaVariables = []
+function matchPatternInside(fileAST, source, taints) {
+    // console.log(source)
+    let wrappersScopes = []
     source.wrappers.forEach((wrapper) => {
-        matchWrapper(fileAST, wrapper.pattern, metaVariables)
+        const match = matchWrapper(fileAST, wrapper.pattern)
+        match && (wrappersScopes = wrappersScopes.concat(match))
+    })
+    source.wrapped = source.wrapped.map((w) => w.pattern.body[0].expression)
+    source.wrapped.forEach((w) => {
+        wrappersScopes.forEach((wrapperScope) => {
+            let matched = false
+            AbstractSyntaxTree.walk(wrapperScope.scope, (node) => {
+                if (!matched) {
+                    if (w.type === node.type) {
+                        if (w.type === "CallExpression") {
+                            if (w.callee.type === node.callee.type) {
+                                if (w.callee.type === "Identifier") {
+                                    const name = w.callee.name.startsWith('$') ? wrapperScope.metaVariables[w.callee.name] : w.calle.name
+                                    if (name === node.callee.name) {
+                                        addTaint({
+                                            name,
+                                            type: w.type,
+                                            scope: getScope(fileAST, node.loc.start.line, node.loc.start.column)
+                                        }, taints)
+                                        matched = true
+                                    }
+                                } else if (w.callee.type === "MemberExpression") {
+                                    const name = getMemberExpressionName(w.callee).startsWith('$') ? wrapperScope.metaVariables[getMemberExpressionName(w.callee)] : getMemberExpressionName(w.callee)
+                                    if (name === getMemberExpressionName(node.callee)) {
+                                        addTaint({
+                                            name,
+                                            type: w.type,
+                                            scope: getScope(fileAST, node.loc.start.line, node.loc.start.column)
+                                        }, taints)
+                                        matched = true
+                                    }
+                                }
+                            }
+                        } else if (w.type === "Identifier") {
+                            const name = w.name.startsWith('$') ? wrapperScope.metaVariables[w.name] : w.name
+                            if (name === node.name) {
+                                addTaint({
+                                    name,
+                                    type: w.type,
+                                    scope: getScope(fileAST, node.loc.start.line, node.loc.start.column)
+                                }, taints)
+                                matched = true
+                            }
+                        } else if (w.type === "MemberExpression") {
+                            const name = getMemberExpressionName(w).startsWith('$') ? wrapperScope.metaVariables[getMemberExpressionName(w)] : getMemberExpressionName(w)
+                            if (name === getMemberExpressionName(node)) {
+                                addTaint({
+                                    name,
+                                    type: w.type,
+                                    scope: getScope(fileAST, node.loc.start.line, node.loc.start.column)
+                                }, taints)
+                                matched = true
+                            }
+                        }
+                    }
+                }
+            })
+        })
     })
 }
-function matchWrapper(fileAST, pattern, metaVariables) {
+function matchWrapper(fileAST, pattern) {
     let targetedNode
     let AST
+    let metaVariables = []
     if (pattern.body.length == 1) { // Type 1 (Single Line)
         targetedNode = pattern.body[0]
         AST = fileAST
@@ -302,21 +366,32 @@ function matchWrapper(fileAST, pattern, metaVariables) {
         targetedNode = createBlockStatement(pattern)
     }
     let match = false
+    let scopeBlockStatements = []
     AbstractSyntaxTree.walk(AST, (node) => {
-        if (!match) {
-            if (targetedNode.type === 'ExpressionStatement') {
-                targetedNode = targetedNode.expression
-            }
-            if (node.type === targetedNode.type) {
-                const childs = {}
-                if (matchTypes[targetedNode.type](targetedNode, node, metaVariables, childs)) {
-                    match = node.loc.start
-                }
+        if (targetedNode.type === 'ExpressionStatement') {
+            targetedNode = targetedNode.expression
+        }
+        if (node.type === targetedNode.type) {
+            const childs = {}
+            if (matchTypes[targetedNode.type](targetedNode, node, metaVariables, childs)) {
+                match = node.loc.start
+                let done = false
+                AbstractSyntaxTree.walk(node, (n) => {
+                    if (!done) {
+                        if (n.type === "BlockStatement") {
+                            scopeBlockStatements.push({
+                                metaVariables,
+                                scope: n
+                            })
+                            metaVariables = []
+                            done = true
+                        }
+                    }
+                })
             }
         }
     })
-
-    console.log(match)
+    return scopeBlockStatements
 }
 function validPatternSink(patternAST) {
     if (patternAST.body.length > 1) {

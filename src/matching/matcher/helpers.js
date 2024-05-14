@@ -30,7 +30,6 @@ function statementsIncludesGeneral(statements) {
     return found
 }
 function clearMeta(childs, metaVariables) {
-    console.log(childs, metaVariables)
     for(let key of Object.keys(childs)){
         if(Array.isArray(childs[key])) {
             for(let child of childs[key]) {
