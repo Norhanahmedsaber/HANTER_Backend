@@ -14,7 +14,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 const port= process.env.PORT
 app.use(cors({
-    origin: ['*']
+    origin: ['https://hanter-meer.onrender.com', '*']
 }))
 app.use(express.json())
 app.use(bodyParser.json())
