@@ -150,7 +150,7 @@ async function getMyProjects(id) {
         // Calculate the difference between the current date and the old last_scan value
         const oldDate = new Date(project.last_scan);
         const currentDate = new Date();
-        const diffInSeconds = Math.floor((currentDate - oldDate) / 1000) - 7200;  // MINUS 2 HRS because of time zone hussien and anas
+        const diffInSeconds = Math.floor((currentDate - oldDate) / 1000);  // MINUS 2 HRS because of time zone hussien and anas
         const diffInMinutes = Math.floor(diffInSeconds / 60); 
         const diffInHours = Math.floor(diffInMinutes / 60); 
         const diffInDays = Math.floor(diffInHours / 24); 
