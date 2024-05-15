@@ -8,6 +8,7 @@ function getPattern(ruleJson) {
     delete (ruleJson.message)
     delete (ruleJson.type)
     delete (ruleJson.language)
+    delete (ruleJson.metadata)
     return ruleJson
 }
 
